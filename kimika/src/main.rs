@@ -1,3 +1,4 @@
+mod receive;
 mod send;
 mod utils;
 
@@ -13,6 +14,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Send(send::SendArgs),
+    Receive(receive::ReceiveArgs),
 }
 
 #[tokio::main]
@@ -21,6 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match cli.command {
         Commands::Send(args) => send::send(args),
+        Commands::Receive(args) => receive::receive(args),
     }
 
     Ok(())
