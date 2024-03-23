@@ -1,4 +1,5 @@
 mod local;
+mod udp;
 
 use clap::Args;
 
@@ -11,6 +12,9 @@ pub struct SendArgs {
 
     #[arg(short, long)]
     pub message: Option<String>,
+
+    #[arg(short, long)]
+    pub target: Option<String>,
 }
 
 pub async fn send(args: SendArgs) -> Result<(), Box<dyn std::error::Error>> {

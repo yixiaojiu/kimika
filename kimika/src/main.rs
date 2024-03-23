@@ -4,6 +4,10 @@ mod utils;
 
 use clap::{Parser, Subcommand};
 
+pub mod transfer {
+    tonic::include_proto!("transfer");
+}
+
 #[derive(Parser)]
 #[command(version, about, long_about = None, styles = utils::clap::clap_styles())]
 struct Cli {

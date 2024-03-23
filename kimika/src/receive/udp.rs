@@ -1,15 +1,15 @@
+use crate::utils::udp::BUFFER_SIZE;
 use crate::utils::udp::{Action, Register};
 use bincode::{deserialize, serialize};
+use std::net::SocketAddrV4;
 use tokio::net::UdpSocket;
 
-const BUFFER_SIZE: usize = 1024;
-
-pub async fn udp_handle() -> Result<(), Box<dyn std::error::Error>> {
-    let socket = UdpSocket::bind("0.0.0.0:3002").await?;
+pub async fn udp_handle(address: &SocketAddrV4) -> Result<(), Box<dyn std::error::Error>> {
+    let socket = UdpSocket::bind(address).await?;
     socket.set_broadcast(true)?;
     let mut buffer = [0u8; BUFFER_SIZE];
 
-    // TODO: 放到配置里
+    // TODO: move to config
     let alias = "bar";
     loop {
         let (num_bytes, address) = socket.recv_from(&mut buffer).await?;

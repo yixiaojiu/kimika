@@ -1,29 +1,34 @@
+use super::udp::{bind_udp, broadcast, find_receiver};
 use super::SendArgs;
-use crate::utils::udp::{Action, Register};
-use bincode::{deserialize, serialize};
-use std::net::{Ipv4Addr, SocketAddrV4};
-use tokio::net::UdpSocket;
+use crate::transfer::{transfer_client::TransferClient, MessageRequest};
+use std::sync::Arc;
+use tokio::sync::oneshot::channel;
+use tonic::transport::Uri;
 
-const BUFFER_SIZE: usize = 1024;
-const CLIENT_PROT: u16 = 3002;
+pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
+    // TODO: move port to config
+    let port: u16 = 3000;
+    let socket = bind_udp(port).await?;
 
-pub async fn local_send(_args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
-    let socket = UdpSocket::bind("0.0.0.0:3000").await?;
-    socket.set_broadcast(true)?;
-    let broadcast_addr = SocketAddrV4::new(Ipv4Addr::new(255, 255, 255, 255), CLIENT_PROT);
+    let socket_clone = Arc::clone(&socket);
+    let (tx, mut rx) = channel::<()>();
+    tokio::spawn(async move {
+        // TODO: move port to config
+        let port: u16 = 3002;
+        broadcast(&socket_clone, port, &mut rx).await.unwrap();
+    });
 
-    let buf = serialize(&Action::Broadcast).unwrap();
-    socket.send_to(&buf, broadcast_addr).await?;
+    let address = find_receiver(&socket, tx).await?;
 
-    let mut buffer = [0u8; BUFFER_SIZE];
-    let (num_bytes, address) = socket.recv_from(&mut buffer).await?;
+    let url = format!("http://{}", address).parse::<Uri>()?;
+    let mut client = TransferClient::connect(url).await?;
 
-    let register: Register = deserialize(&buffer[..num_bytes])?;
-    println!("Received register alias: {}", register.alias);
-    println!("From: {}", address);
-
-    let buf = serialize(&Action::Close).unwrap();
-    socket.send_to(&buf, address).await?;
+    client
+        .send_message(MessageRequest {
+            message: args.message.clone().unwrap(),
+        })
+        .await
+        .unwrap();
 
     Ok(())
 }

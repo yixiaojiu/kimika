@@ -1,10 +1,6 @@
+use crate::transfer::transfer_server::Transfer;
+use crate::transfer::{EmptyResponse, MessageRequest};
 use tonic::{Request, Response, Status};
-use transfer::transfer_server::Transfer;
-use transfer::{EmptyResponse, MessageRequest};
-
-pub mod transfer {
-    tonic::include_proto!("transfer");
-}
 
 #[derive(Debug, Default)]
 pub struct TransferService {}
