@@ -19,18 +19,20 @@ address = 127.0.0.1:3100
 ### 发送消息（未指定目标）
 
 1. `kimika receive`
-2. `kimika send -m "hello"`
-3. 发送端 udp 广播寻找接收者
-4. 接收端回应 udp 包，告知 IP，端口与 别名，并开启 grpc 服务
-5. 发送端选择接收对象，并与接收端建立 grpc 连接
-6. 发送端发送数据
+2. 接收端等待接收 udp 广播包，并开启 grpc 服务
+3. `kimika send -m "hello"`
+4. 发送端 udp 广播寻找接收者
+5. 接收端回应 udp 包，告知 IP，端口与别名
+6. 发送端选择接收对象，并与接收端建立 grpc 连接。接收端停止监听 udp
+7. 发送端发送数据
 
 ### 发送消息（指定目标）
 
 1. `kimika receive`
-2. `kimika send -m "hello" --target 127.0.0.1:3000`
-3. 接收端建立 grpc 连接
-4. 发送端发送数据
+2. 接收端等待接收 udp 广播包，并开启 grpc 服务
+3. `kimika send -m "hello" --target 127.0.0.1:3000`
+4. 发送端连接 grpc。接收端停止监听 udp
+5. 发送端发送数据
 
 ### 发送消息（通过服务器）
 

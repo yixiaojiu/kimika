@@ -1,0 +1,16 @@
+syntax = "proto3";
+package transfer;
+
+service Transfer {
+    rpc SendMessage (MessageRequest) returns (EmptyResponse);
+}
+
+message EmptyRequest {
+}
+
+message EmptyResponse {
+}
+
+message MessageRequest {
+    string message = 1;
+}

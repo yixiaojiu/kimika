@@ -1,3 +1,5 @@
+mod local;
+
 use clap::Args;
 
 /// send file
@@ -11,12 +13,7 @@ pub struct SendArgs {
     pub message: Option<String>,
 }
 
-pub fn send(args: SendArgs) {
-    if let Some(path) = args.path {
-        println!("send file: {}", path);
-    }
-
-    if let Some(message) = args.message {
-        println!("send message: {}", message);
-    }
+pub async fn send(args: SendArgs) -> Result<(), Box<dyn std::error::Error>> {
+    local::local_send(&args).await?;
+    Ok(())
 }

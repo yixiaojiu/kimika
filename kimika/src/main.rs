@@ -22,8 +22,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Send(args) => send::send(args),
-        Commands::Receive(args) => receive::receive(args),
+        Commands::Send(args) => send::send(args).await?,
+        Commands::Receive(args) => receive::receive(args).await?,
     }
 
     Ok(())
