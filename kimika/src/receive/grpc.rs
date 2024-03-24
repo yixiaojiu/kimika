@@ -1,5 +1,5 @@
 use crate::transfer::transfer_server::Transfer;
-use crate::transfer::{EmptyResponse, MessageRequest};
+use crate::transfer::{EmptyRequest, EmptyResponse, MessageRequest};
 use tonic::{Request, Response, Status};
 
 #[derive(Debug)]
@@ -24,8 +24,11 @@ impl Transfer for TransferService {
         request: Request<MessageRequest>,
     ) -> Result<Response<EmptyResponse>, Status> {
         let message_request = request.into_inner();
-        println!("Received message: {}", message_request.message);
+        println!("{}", message_request.message);
+        Ok(Response::new(EmptyResponse {}))
+    }
 
+    async fn close(&self, _: Request<EmptyRequest>) -> Result<Response<EmptyResponse>, Status> {
         self.shutdown().await;
         Ok(Response::new(EmptyResponse {}))
     }

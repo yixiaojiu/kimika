@@ -3,6 +3,8 @@ package transfer;
 
 service Transfer {
     rpc SendMessage (MessageRequest) returns (EmptyResponse);
+
+    rpc Close (EmptyRequest) returns (EmptyResponse);
 }
 
 message EmptyRequest {

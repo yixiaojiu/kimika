@@ -1,4 +1,4 @@
-use crate::utils::color::paint_green;
+use crate::utils::color::{paint_green, paint_yellow};
 use crate::utils::udp::{Action, Register, BUFFER_SIZE};
 use bincode::{deserialize, serialize};
 use std::net::SocketAddrV4;
@@ -6,11 +6,12 @@ use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::UdpSocket;
-use tokio::sync::oneshot::{Receiver, Sender};
+use tokio::sync::oneshot::Receiver;
 use tokio::time::sleep;
 
-const SLEEP_DURATION: Duration = Duration::from_millis(300);
+const SLEEP_DURATION: Duration = Duration::from_millis(100);
 
+/// create udp listener
 pub async fn bind_udp(port: u16) -> Result<Arc<UdpSocket>, Box<dyn std::error::Error>> {
     let address = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), port);
     let socket = Arc::new(UdpSocket::bind(address).await?);
@@ -36,10 +37,7 @@ pub async fn broadcast(
     Ok(())
 }
 
-pub async fn find_receiver(
-    socket: &UdpSocket,
-    tx: Sender<()>,
-) -> Result<SocketAddr, Box<dyn std::error::Error>> {
+pub async fn find_receiver(socket: &UdpSocket) -> Result<SocketAddr, Box<dyn std::error::Error>> {
     let mut buffer = [0u8; BUFFER_SIZE];
     let (num_bytes, address) = socket.recv_from(&mut buffer).await?;
 
@@ -47,12 +45,17 @@ pub async fn find_receiver(
     println!(
         "Find a receiver: {} {}",
         paint_green(&address.to_string()),
-        paint_green(&register.alias)
+        paint_yellow(&register.alias)
     );
 
-    let buf = serialize(&Action::Close).unwrap();
-    socket.send_to(&buf, address).await?;
-    // close boardcast
-    let _ = tx.send(());
     Ok(address)
+}
+
+pub async fn close_receiver(
+    socket: &UdpSocket,
+    address: &SocketAddr,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let buf = serialize(&Action::Close)?;
+    socket.send_to(&buf, address).await?;
+    Ok(())
 }
