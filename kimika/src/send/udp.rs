@@ -50,8 +50,8 @@ pub async fn find_receiver(
         paint_green(&register.alias)
     );
 
-    // let buf = serialize(&Action::Close).unwrap();
-    // socket.send_to(&buf, address).await?;
+    let buf = serialize(&Action::Close).unwrap();
+    socket.send_to(&buf, address).await?;
     // close boardcast
     let _ = tx.send(());
     Ok(address)
