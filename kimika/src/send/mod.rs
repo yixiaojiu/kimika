@@ -1,3 +1,4 @@
+mod grpc;
 mod local;
 mod udp;
 
@@ -15,6 +16,14 @@ pub struct SendArgs {
 
     #[arg(short, long)]
     pub target: Option<String>,
+
+    // TODO: move port to config
+    #[arg(long, default_value = "3939")]
+    pub port: u16,
+
+    // TODO: move port to config
+    #[arg(long, default_value = "3939")]
+    pub receiver_port: u16,
 }
 
 pub async fn send(args: SendArgs) -> Result<(), Box<dyn std::error::Error>> {

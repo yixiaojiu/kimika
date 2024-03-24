@@ -1,14 +1,12 @@
-use super::grpc::TransferService;
 use super::udp::udp_handle;
+use super::{grpc::TransferService, ReceiveArgs};
 use crate::transfer::transfer_server::TransferServer;
 use std::net::{Ipv4Addr, SocketAddrV4};
 use tokio::sync::mpsc::channel;
 use tonic::transport::Server;
 
-pub async fn local_receive() -> Result<(), Box<dyn std::error::Error>> {
-    // TODO: move port to config
-    let port: u16 = 3002;
-    let address = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), port);
+pub async fn local_receive(args: ReceiveArgs) -> Result<(), Box<dyn std::error::Error>> {
+    let address = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), args.port);
     tokio::spawn(async move {
         udp_handle(&address).await.unwrap();
     });

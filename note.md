@@ -13,7 +13,7 @@ alias = ""
 # 默认使用 server 桥接
 enable = false
 # 地址
-address = 127.0.0.1:3100
+address = 127.0.0.1:3939
 ```
 
 ### 发送消息（未指定目标）

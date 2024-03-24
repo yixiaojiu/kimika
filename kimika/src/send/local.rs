@@ -1,16 +1,12 @@
+use super::grpc::{send_file, send_message};
 use super::udp::{bind_udp, broadcast, close_receiver, find_receiver};
 use super::SendArgs;
-use crate::transfer::{
-    transfer_client::TransferClient, EmptyRequest, EmptyResponse, MessageRequest,
-};
-use crate::utils::{
-    color::{print_color, Color},
-    utils_type::TonicRes,
-};
+use crate::transfer::{transfer_client::TransferClient, EmptyRequest};
+use crate::utils::color::{print_color, Color};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::oneshot::channel;
-use tonic::transport::{Channel, Uri};
+use tonic::transport::Uri;
 
 pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
     if args.path.is_none() && args.message.is_none() {
@@ -18,9 +14,7 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
         return Ok(());
     }
 
-    // TODO: move port to config
-    let port: u16 = 3000;
-    let socket = bind_udp(port).await?;
+    let socket = bind_udp(args.port).await?;
     let socket_clone = Arc::clone(&socket);
 
     let address = if let Some(target) = &args.target {
@@ -29,10 +23,11 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
             .expect("invalid target address")
     } else {
         let (tx, mut rx) = channel::<()>();
+        let receiver_port = args.receiver_port.clone();
         tokio::spawn(async move {
-            // TODO: move port to config
-            let port: u16 = 3002;
-            broadcast(&socket_clone, port, &mut rx).await.unwrap();
+            broadcast(&socket_clone, receiver_port, &mut rx)
+                .await
+                .unwrap();
         });
         let address = find_receiver(&socket).await?;
         tx.send(()).unwrap();
@@ -57,16 +52,4 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
     client.close(EmptyRequest {}).await.unwrap();
 
     Ok(())
-}
-
-#[allow(unused_variables)]
-async fn send_file(client: &mut TransferClient<Channel>, path: String) -> TonicRes<EmptyResponse> {
-    todo!()
-}
-
-async fn send_message(client: &mut TransferClient<Channel>, message: String) {
-    client
-        .send_message(MessageRequest { message })
-        .await
-        .expect("send message failed");
 }
