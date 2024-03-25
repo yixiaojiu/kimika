@@ -11,6 +11,10 @@ pub struct ReceiveArgs {
     // TODO: move port to config
     #[arg(long, default_value = "3939")]
     pub port: u16,
+
+    // TODO: move port to config
+    #[arg(long, default_value = "")]
+    pub save_folder: String,
 }
 
 pub async fn receive(args: ReceiveArgs) -> Result<(), Box<dyn std::error::Error>> {

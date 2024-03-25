@@ -13,7 +13,7 @@ pub async fn local_receive(args: ReceiveArgs) -> Result<(), Box<dyn std::error::
 
     let (shutdown_sender, mut shutdown_receiver) = channel::<()>(1);
 
-    let local_serviece = LocalService::new(shutdown_sender);
+    let local_serviece = LocalService::new(shutdown_sender, args.save_folder);
     Server::builder()
         .add_service(LocalServer::new(local_serviece))
         .serve_with_shutdown(address.into(), async move {

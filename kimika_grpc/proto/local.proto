@@ -5,6 +5,10 @@ service Local {
     rpc SendMessage (MessageRequest) returns (EmptyResponse);
 
     rpc Close (EmptyRequest) returns (EmptyResponse);
+
+    // rpc FilesMetadata (EmptyRequest) returns (EmptyResponse);
+
+    rpc SendFile (stream FileRequest) returns (EmptyResponse);
 }
 
 message EmptyRequest {
@@ -15,4 +19,17 @@ message EmptyResponse {
 
 message MessageRequest {
     string message = 1;
+}
+
+message FileRequest {
+    bytes data = 1;
+}
+
+message FilesMetadataRequest {
+
+}
+
+message FileMetadata {
+    bool is_folder = 1;
+    string name = 2;
 }
