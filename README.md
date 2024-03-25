@@ -1,4 +1,4 @@
-# Kimika
+# kimika
 
 ## How to develop
 
