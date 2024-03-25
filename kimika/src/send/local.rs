@@ -1,8 +1,7 @@
 use super::grpc::{send_file, send_message};
 use super::udp::{bind_udp, broadcast, close_receiver, find_receiver};
 use super::SendArgs;
-use crate::transfer::{transfer_client::TransferClient, EmptyRequest};
-use crate::utils::color::{print_color, Color};
+use kimika_grpc::local::{local_client::LocalClient, EmptyRequest};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::oneshot::channel;
@@ -10,7 +9,7 @@ use tonic::transport::Uri;
 
 pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
     if args.path.is_none() && args.message.is_none() {
-        print_color("Please specify a file or a message", Color::Yellow);
+        eprintln!("Please specify a file or a message");
         return Ok(());
     }
 
@@ -37,7 +36,7 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
     close_receiver(&socket, &address).await?;
 
     let url = format!("http://{}", address).parse::<Uri>()?;
-    let mut client = TransferClient::connect(url)
+    let mut client = LocalClient::connect(url)
         .await
         .expect("connect receiver failed");
 

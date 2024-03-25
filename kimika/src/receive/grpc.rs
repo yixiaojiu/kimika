@@ -1,15 +1,15 @@
-use crate::transfer::transfer_server::Transfer;
-use crate::transfer::{EmptyRequest, EmptyResponse, MessageRequest};
+use kimika_grpc::local::local_server::Local;
+use kimika_grpc::local::{EmptyRequest, EmptyResponse, MessageRequest};
 use tonic::{Request, Response, Status};
 
 #[derive(Debug)]
-pub struct TransferService {
+pub struct LocalService {
     tx: tokio::sync::mpsc::Sender<()>,
 }
 
-impl TransferService {
+impl LocalService {
     pub fn new(tx: tokio::sync::mpsc::Sender<()>) -> Self {
-        TransferService { tx }
+        LocalService { tx }
     }
 
     async fn shutdown(&self) {
@@ -18,13 +18,13 @@ impl TransferService {
 }
 
 #[tonic::async_trait]
-impl Transfer for TransferService {
+impl Local for LocalService {
     async fn send_message(
         &self,
         request: Request<MessageRequest>,
     ) -> Result<Response<EmptyResponse>, Status> {
         let message_request = request.into_inner();
-        println!("{}", message_request.message);
+        print!("{}", message_request.message);
         Ok(Response::new(EmptyResponse {}))
     }
 

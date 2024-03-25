@@ -1,6 +1,6 @@
 use super::udp::udp_handle;
-use super::{grpc::TransferService, ReceiveArgs};
-use crate::transfer::transfer_server::TransferServer;
+use super::{grpc::LocalService, ReceiveArgs};
+use kimika_grpc::local::local_server::LocalServer;
 use std::net::{Ipv4Addr, SocketAddrV4};
 use tokio::sync::mpsc::channel;
 use tonic::transport::Server;
@@ -13,9 +13,9 @@ pub async fn local_receive(args: ReceiveArgs) -> Result<(), Box<dyn std::error::
 
     let (shutdown_sender, mut shutdown_receiver) = channel::<()>(1);
 
-    let transfer_serviece = TransferService::new(shutdown_sender);
+    let local_serviece = LocalService::new(shutdown_sender);
     Server::builder()
-        .add_service(TransferServer::new(transfer_serviece))
+        .add_service(LocalServer::new(local_serviece))
         .serve_with_shutdown(address.into(), async move {
             shutdown_receiver.recv().await.unwrap();
         })

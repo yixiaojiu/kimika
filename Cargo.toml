@@ -1,9 +1,4 @@
 [workspace]
 
-members = ["kimika", "kimika-server"] 
+members = ["kimika", "kimika-server", "kimika_grpc"] 
 resolver = "2"
-
-[package]
-name = "workspace"
-version = "0.1.0"
-edition = "2021"

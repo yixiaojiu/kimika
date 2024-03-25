@@ -535,6 +535,7 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "clap",
+ "kimika_grpc",
  "prost",
  "serde",
  "tokio",
@@ -546,6 +547,15 @@ dependencies = [
 [[package]]
 name = "kimika-server"
 version = "0.1.0"
+
+[[package]]
+name = "kimika_grpc"
+version = "0.1.0"
+dependencies = [
+ "prost",
+ "tonic",
+ "tonic-build",
+]
 
 [[package]]
 name = "libc"
@@ -1270,7 +1280,3 @@ name = "windows_x86_64_msvc"
 version = "0.52.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32b752e52a2da0ddfbdbcc6fceadfeede4c939ed16d13e648833a61dfb611ed8"
-
-[[package]]
-name = "workspace"
-version = "0.1.0"
