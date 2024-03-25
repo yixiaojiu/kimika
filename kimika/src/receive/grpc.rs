@@ -52,11 +52,21 @@ impl Local for LocalService {
         let file_metadata = request.metadata();
         let filename = file_metadata.get("filename").unwrap().to_str().unwrap();
 
-        let path = if let Some(save_folder) = &self.save_folder {
+        let mut path = if let Some(save_folder) = &self.save_folder {
             Path::new(save_folder).join(filename)
         } else {
             Path::new(filename).to_path_buf()
         };
+
+        let mut rename_num = 1;
+        loop {
+            if !path.exists() {
+                break;
+            }
+            path.set_file_name(format!("{}({})", filename, rename_num));
+            rename_num += 1;
+        }
+
         let mut file = File::create(path).await?;
 
         let mut stream = request.into_inner();

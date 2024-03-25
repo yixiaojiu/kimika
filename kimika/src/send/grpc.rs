@@ -1,7 +1,6 @@
-use std::path::Path;
-
 use crate::utils::color::{print_color, Color};
 use kimika_grpc::local::{local_client::LocalClient, FileRequest, MessageRequest};
+use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 use tokio::sync::mpsc;
@@ -19,7 +18,7 @@ pub async fn send_file(
     let (tx, rx) = mpsc::channel(20);
 
     tokio::spawn(async move {
-        let mut buf = [0; 1024 * 512];
+        let mut buf = [0; 1024 * 1024];
         loop {
             let n = file.read(&mut buf).await.unwrap();
             if n == 0 {
@@ -29,7 +28,7 @@ pub async fn send_file(
                 data: buf[..n].to_vec(),
             };
             tx.send(req).await.unwrap();
-            println!("Sent {} kB", n / 1024);
+            println!("Sent {} MB", n / (1024 * 1024));
         }
     });
 

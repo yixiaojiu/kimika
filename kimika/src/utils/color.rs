@@ -6,6 +6,7 @@ pub fn paint_yellow(text: &str) -> String {
     format!("\x1b[33m{}\x1b[0m", text)
 }
 
+#[allow(dead_code)]
 pub enum Color {
     Yellow,
     Green,
