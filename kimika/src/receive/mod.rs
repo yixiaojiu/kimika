@@ -9,11 +9,11 @@ use clap::Args;
 #[command(version, about, long_about = None)]
 pub struct ReceiveArgs {
     // TODO: move port to config
-    #[arg(long, default_value = "3939")]
+    #[arg(long, default_value = "3939", value_name = "port")]
     pub port: u16,
 
     // TODO: move port to config
-    #[arg(long, default_value = "")]
+    #[arg(long, default_value = "", value_name = "save_folder")]
     pub save_folder: String,
 }
 

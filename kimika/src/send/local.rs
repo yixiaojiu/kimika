@@ -8,7 +8,7 @@ use tokio::sync::oneshot::channel;
 use tonic::transport::Uri;
 
 pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
-    if args.path.is_none() && args.message.is_none() {
+    if args.path.is_none() && args.message.is_none() && !args.input {
         eprintln!("Please specify a file or a message");
         return Ok(());
     }
@@ -42,6 +42,19 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
 
     if let Some(message) = &args.message {
         send_message(&mut client, message.clone()).await;
+    }
+
+    if args.input {
+        // let mut stdin = stdin();
+        // let mut buffer = [0u8; 1024];
+        // let message = String::from_utf8_lossy(&buffer).trim().to_string();
+        // print!("{}", message);
+        let mut message = String::new();
+        std::io::stdin()
+            .read_line(&mut message)
+            .expect("read line failed");
+
+        send_message(&mut client, message.trim_end().to_string()).await;
     }
 
     if let Some(path) = &args.path {
