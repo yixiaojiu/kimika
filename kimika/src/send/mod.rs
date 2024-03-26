@@ -23,7 +23,7 @@ pub struct SendArgs {
     #[arg(long, default_value = "3939", value_name = "receiver_port")]
     pub receiver_port: u16,
 
-    /// whether to read message from standard input
+    /// whether to read message from standard input, press ctrl_d to end input
     #[arg(short, long, value_name = "input")]
     pub input: bool,
 }

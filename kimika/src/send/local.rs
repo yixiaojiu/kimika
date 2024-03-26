@@ -2,6 +2,7 @@ use super::grpc::{send_file, send_message};
 use super::udp::{bind_udp, broadcast, close_receiver, find_receiver};
 use super::SendArgs;
 use kimika_grpc::local::{local_client::LocalClient, EmptyRequest};
+use std::io::Read;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::oneshot::channel;
@@ -44,15 +45,12 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
         send_message(&mut client, message.clone()).await;
     }
 
-    if args.input {
-        // let mut stdin = stdin();
-        // let mut buffer = [0u8; 1024];
-        // let message = String::from_utf8_lossy(&buffer).trim().to_string();
-        // print!("{}", message);
+    if args.input && args.message.is_none() {
         let mut message = String::new();
+
         std::io::stdin()
-            .read_line(&mut message)
-            .expect("read line failed");
+            .read_to_string(&mut message)
+            .expect("read standard input failed");
 
         send_message(&mut client, message.trim_end().to_string()).await;
     }
