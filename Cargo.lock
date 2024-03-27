@@ -536,7 +536,7 @@ dependencies = [
  "bincode",
  "clap",
  "kimika_grpc",
- "prost",
+ "kimika_shared",
  "serde",
  "tokio",
  "tokio-stream",
@@ -547,6 +547,13 @@ dependencies = [
 [[package]]
 name = "kimika-server"
 version = "0.1.0"
+dependencies = [
+ "kimika_grpc",
+ "kimika_shared",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+]
 
 [[package]]
 name = "kimika_grpc"
@@ -555,6 +562,13 @@ dependencies = [
  "prost",
  "tonic",
  "tonic-build",
+]
+
+[[package]]
+name = "kimika_shared"
+version = "0.1.0"
+dependencies = [
+ "tonic",
 ]
 
 [[package]]

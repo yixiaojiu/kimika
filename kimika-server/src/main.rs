@@ -1,3 +1,3 @@
-fn main() {
-    println!("Hello, world!");
-}
+mod grpc;
+
+fn main() {}

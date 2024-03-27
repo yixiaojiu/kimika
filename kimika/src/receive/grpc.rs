@@ -1,14 +1,12 @@
-use std::path::Path;
-
-use crate::utils::utils_type::TonicRes;
 use kimika_grpc::local::local_server::Local;
 use kimika_grpc::local::{EmptyRequest, EmptyResponse, FileRequest, MessageRequest};
+use kimika_shared::type_utils::TonicRes;
+use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tokio_stream::StreamExt;
 use tonic::{Request, Response};
 
-#[derive(Debug)]
 pub struct LocalService {
     tx: tokio::sync::mpsc::Sender<()>,
     save_folder: Option<String>,
@@ -73,7 +71,7 @@ impl Local for LocalService {
         while let Some(request) = stream.next().await {
             let request = request?;
             let data = request.data;
-            file.write(&data[..]).await?;
+            file.write(&data).await?;
         }
         Ok(Response::new(EmptyResponse {}))
     }
