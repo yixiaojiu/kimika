@@ -1,7 +1,7 @@
 syntax = "proto3";
 package remote;
 
-service Local {
+service Remote {
 	// receiver register
 	rpc Register(RegisterRequest) returns (RegisterResponse);
 
@@ -24,14 +24,13 @@ message RegisterRequest {
 
 message RegisterResponse {
 	enum Type {
-	File = 0;
-	Message = 1;
+		File = 0;
+		Message = 1;
 	}
 
-	// receive content type
-	Type type = 1;
+	Type content_type = 1;
 
-	// Identifier used by the receiver to determine to receive
+	// Identifier
 	string id = 2;
 
 	// file byte size
@@ -47,11 +46,12 @@ message GetReceiversRequest {
 }
 
 message GetReceiversResponse {
-	message Receivers {
-	string alias = 1;
+	message Receiver {
+		string alias = 1;
+		string id = 2;
 	}
 
-	repeated Receivers receivers = 1;
+	repeated Receiver receivers = 1;
 	}
 
 message SendRequest {

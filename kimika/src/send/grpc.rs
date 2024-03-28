@@ -4,7 +4,8 @@ use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 use tokio::sync::mpsc;
-use tonic::transport::Channel;
+use tokio_stream::wrappers::ReceiverStream;
+use tonic::{transport::Channel, Request};
 
 #[allow(unused_variables)]
 pub async fn send_file(
@@ -32,7 +33,7 @@ pub async fn send_file(
         }
     });
 
-    let mut request = tonic::Request::new(tokio_stream::wrappers::ReceiverStream::new(rx));
+    let mut request = Request::new(ReceiverStream::new(rx));
     request
         .metadata_mut()
         .insert("filename", file_name.parse()?);

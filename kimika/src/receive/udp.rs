@@ -4,13 +4,14 @@ use bincode::{deserialize, serialize};
 use std::net::SocketAddrV4;
 use tokio::net::UdpSocket;
 
-pub async fn udp_handle(address: &SocketAddrV4) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn listen_boardcast(
+    address: &SocketAddrV4,
+    alias: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let socket = UdpSocket::bind(address).await?;
     socket.set_broadcast(true)?;
     let mut buffer = [0u8; BUFFER_SIZE];
 
-    // TODO: move to config
-    let alias = "bar";
     loop {
         let (num_bytes, address) = socket.recv_from(&mut buffer).await?;
         let action: Action = deserialize(&buffer[..num_bytes])?;

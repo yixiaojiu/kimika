@@ -10,5 +10,5 @@ kimika_grpc = { path = "../kimika_grpc" }
 kimika_shared = { path = "../kimika_shared" }
 
 tonic = "0.11.0"
-tokio = { version =  "1.36.0", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "io-util"] }
+tokio = { version =  "1.36.0", features = ["macros", "sync", "time", "fs", "io-util"] }
 tokio-stream = "0.1.15"
