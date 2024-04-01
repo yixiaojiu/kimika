@@ -5,7 +5,7 @@ service Remote {
 	// receiver register
 	rpc Register(RegisterRequest) returns (RegisterResponse);
 
-	rpc GetReceivers(GetReceiversRequest) returns (GetReceiversResponse);
+	rpc GetReceivers(GetReceiversRequest) returns (stream GetReceiversResponse);
 
 	rpc Send(stream SendRequest) returns (EmptyResponse);
 

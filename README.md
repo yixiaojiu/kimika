@@ -13,7 +13,9 @@
 ## Installation
 
 ```sh
-cargo install --git https://github.com/yixiaojiu/kimika
+git clone https://github.com/yixiaojiu/kimika
+
+cargo install ./kimika/kimika
 ```
 
 ## Usage

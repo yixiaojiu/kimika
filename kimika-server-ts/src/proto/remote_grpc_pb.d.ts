@@ -26,7 +26,7 @@ interface IRemoteService_IRegister extends grpc.MethodDefinition<remote_pb.Regis
 interface IRemoteService_IGetReceivers extends grpc.MethodDefinition<remote_pb.GetReceiversRequest, remote_pb.GetReceiversResponse> {
     path: "/remote.Remote/GetReceivers";
     requestStream: false;
-    responseStream: false;
+    responseStream: true;
     requestSerialize: grpc.serialize<remote_pb.GetReceiversRequest>;
     requestDeserialize: grpc.deserialize<remote_pb.GetReceiversRequest>;
     responseSerialize: grpc.serialize<remote_pb.GetReceiversResponse>;
@@ -55,7 +55,7 @@ export const RemoteService: IRemoteService;
 
 export interface IRemoteServer extends grpc.UntypedServiceImplementation {
     register: grpc.handleUnaryCall<remote_pb.RegisterRequest, remote_pb.RegisterResponse>;
-    getReceivers: grpc.handleUnaryCall<remote_pb.GetReceiversRequest, remote_pb.GetReceiversResponse>;
+    getReceivers: grpc.handleServerStreamingCall<remote_pb.GetReceiversRequest, remote_pb.GetReceiversResponse>;
     send: grpc.handleClientStreamingCall<remote_pb.SendRequest, remote_pb.EmptyResponse>;
     receive: grpc.handleServerStreamingCall<remote_pb.ReceiveRequest, remote_pb.ReceiveResponse>;
 }
@@ -64,9 +64,8 @@ export interface IRemoteClient {
     register(request: remote_pb.RegisterRequest, callback: (error: grpc.ServiceError | null, response: remote_pb.RegisterResponse) => void): grpc.ClientUnaryCall;
     register(request: remote_pb.RegisterRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: remote_pb.RegisterResponse) => void): grpc.ClientUnaryCall;
     register(request: remote_pb.RegisterRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: remote_pb.RegisterResponse) => void): grpc.ClientUnaryCall;
-    getReceivers(request: remote_pb.GetReceiversRequest, callback: (error: grpc.ServiceError | null, response: remote_pb.GetReceiversResponse) => void): grpc.ClientUnaryCall;
-    getReceivers(request: remote_pb.GetReceiversRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: remote_pb.GetReceiversResponse) => void): grpc.ClientUnaryCall;
-    getReceivers(request: remote_pb.GetReceiversRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: remote_pb.GetReceiversResponse) => void): grpc.ClientUnaryCall;
+    getReceivers(request: remote_pb.GetReceiversRequest, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<remote_pb.GetReceiversResponse>;
+    getReceivers(request: remote_pb.GetReceiversRequest, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<remote_pb.GetReceiversResponse>;
     send(callback: (error: grpc.ServiceError | null, response: remote_pb.EmptyResponse) => void): grpc.ClientWritableStream<remote_pb.SendRequest>;
     send(metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: remote_pb.EmptyResponse) => void): grpc.ClientWritableStream<remote_pb.SendRequest>;
     send(options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: remote_pb.EmptyResponse) => void): grpc.ClientWritableStream<remote_pb.SendRequest>;
@@ -80,9 +79,8 @@ export class RemoteClient extends grpc.Client implements IRemoteClient {
     public register(request: remote_pb.RegisterRequest, callback: (error: grpc.ServiceError | null, response: remote_pb.RegisterResponse) => void): grpc.ClientUnaryCall;
     public register(request: remote_pb.RegisterRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: remote_pb.RegisterResponse) => void): grpc.ClientUnaryCall;
     public register(request: remote_pb.RegisterRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: remote_pb.RegisterResponse) => void): grpc.ClientUnaryCall;
-    public getReceivers(request: remote_pb.GetReceiversRequest, callback: (error: grpc.ServiceError | null, response: remote_pb.GetReceiversResponse) => void): grpc.ClientUnaryCall;
-    public getReceivers(request: remote_pb.GetReceiversRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: remote_pb.GetReceiversResponse) => void): grpc.ClientUnaryCall;
-    public getReceivers(request: remote_pb.GetReceiversRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: remote_pb.GetReceiversResponse) => void): grpc.ClientUnaryCall;
+    public getReceivers(request: remote_pb.GetReceiversRequest, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<remote_pb.GetReceiversResponse>;
+    public getReceivers(request: remote_pb.GetReceiversRequest, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<remote_pb.GetReceiversResponse>;
     public send(callback: (error: grpc.ServiceError | null, response: remote_pb.EmptyResponse) => void): grpc.ClientWritableStream<remote_pb.SendRequest>;
     public send(metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: remote_pb.EmptyResponse) => void): grpc.ClientWritableStream<remote_pb.SendRequest>;
     public send(options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: remote_pb.EmptyResponse) => void): grpc.ClientWritableStream<remote_pb.SendRequest>;

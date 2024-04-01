@@ -38,7 +38,11 @@ address = 127.0.0.1:3939
 
 1. 服务器开启 grpc 服务
 2. `kimika receive --server`
-3. 接收端向调用服务器调用`receive`注册（别名，IP），并建立服务器向发送端的单向流
-4. `kimika send -m "hello" --server` 发送端向服务器查询有哪些接收端
-5. 选择接收端，发送数据，服务器将数据转发给接收端
-6. 服务器断开与发送端的单项流
+3. 接收端向服务器调用`RegisterReceiver`注册，服务器返回 id
+4. 接收端向服务器调用 `GetContent`，服务器返回数据流
+5. `kimika send -m "hello" --server` 发送端向服务器查询有哪些接收端，服务端返回数据流
+6. 发送端调用 `RegisterContent` 注册需要发送的内容，服务器返回 id
+7. 发送端调用 `GetReceivers`，服务器返回数据流
+8. 发送端选择接收端，调用 `ChooseReceiver`，服务器返回 `GetContent` 响应
+9. 发送端调用 `Receive`，传入 `Content id`，服务端响应 `ChooseReceiver`
+10. 发送端调用 `Send`

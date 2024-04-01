@@ -109,7 +109,7 @@ register: {
   getReceivers: {
     path: '/remote.Remote/GetReceivers',
     requestStream: false,
-    responseStream: false,
+    responseStream: true,
     requestType: remote_pb.GetReceiversRequest,
     responseType: remote_pb.GetReceiversResponse,
     requestSerialize: serialize_remote_GetReceiversRequest,
