@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/kimika.jpg" alt="Yazi logo" width="200">
+  <img src="assets/kimika.png" alt="Yazi logo" width="200">
 </div>
 
 ## Kimika - CLI tool for sending text or files

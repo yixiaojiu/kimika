@@ -1,0 +1,67 @@
+syntax = "proto3";
+package remote;
+
+service Remote {
+	// receiver register
+	rpc Register(RegisterRequest) returns (RegisterResponse);
+
+	rpc GetReceivers(GetReceiversRequest) returns (GetReceiversResponse);
+
+	rpc Send(stream SendRequest) returns (EmptyResponse);
+
+	rpc Receive(ReceiveRequest) returns (stream ReceiveResponse);
+}
+
+message EmptyRequest {
+}
+
+message EmptyResponse {
+}
+
+message RegisterRequest {
+	string alias = 1;
+}
+
+message RegisterResponse {
+	enum Type {
+		File = 0;
+		Message = 1;
+	}
+
+	Type content_type = 1;
+
+	// Identifier
+	string id = 2;
+
+	// file byte size
+	optional int64 size = 3;
+
+	// file name
+	optional string name = 4;
+}
+
+message GetReceiversRequest {
+	// sender alias
+	optional string alias = 1;
+}
+
+message GetReceiversResponse {
+	message Receiver {
+		string alias = 1;
+		string id = 2;
+	}
+
+	repeated Receiver receivers = 1;
+	}
+
+message SendRequest {
+	bytes data = 1;
+}
+
+message ReceiveRequest {
+	string id = 2;
+}
+
+message ReceiveResponse {
+	bytes data = 1;
+}
