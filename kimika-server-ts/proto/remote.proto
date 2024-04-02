@@ -2,14 +2,20 @@ syntax = "proto3";
 package remote;
 
 service Remote {
-	// receiver register
-	rpc Register(RegisterRequest) returns (RegisterResponse);
 
-	rpc GetReceivers(GetReceiversRequest) returns (stream GetReceiversResponse);
+	rpc RegisterReceiver(RegisterReceiverRequest) returns (RegisterResponse);
 
-	rpc Send(stream SendRequest) returns (EmptyResponse);
+	rpc RegisterContent(RegisterContentRequest) returns (RegisterResponse);
 
-	rpc Receive(ReceiveRequest) returns (stream ReceiveResponse);
+	rpc GetContent(EmptyRequest) returns (stream GetContentReponse);
+
+	rpc GetReceivers(EmptyRequest) returns (stream GetReceiversResponse);
+
+	rpc ChooseReceiver(ChooseReceiverRequest) returns (stream ChooseReceiverResponse);
+
+	rpc Send(stream TransferContent) returns (EmptyResponse);
+
+	rpc Receive(ReceiveRequest) returns (stream TransferContent);
 }
 
 message EmptyRequest {
@@ -18,50 +24,68 @@ message EmptyRequest {
 message EmptyResponse {
 }
 
-message RegisterRequest {
+message RegisterReceiverRequest {
 	string alias = 1;
 }
 
 message RegisterResponse {
-	enum Type {
-		File = 0;
-		Message = 1;
-	}
+	string id = 1;
+}
 
+enum Type {
+	FILE = 0;
+	MESSAGE = 1;
+}
+
+message RegisterContentRequest {
 	Type content_type = 1;
 
-	// Identifier
-	string id = 2;
+	// sender alias
+	string alias = 2;
 
-	// file byte size
 	optional int64 size = 3;
 
-	// file name
 	optional string name = 4;
 }
 
-message GetReceiversRequest {
+message GetContentReponse {
+	Type content_type = 1;
+
 	// sender alias
-	optional string alias = 1;
+	string alias = 2;
+
+	string ip = 3;
+
+	optional int64 size = 4;
+
+	optional string name = 5;
 }
 
 message GetReceiversResponse {
 	message Receiver {
 		string alias = 1;
-		string id = 2;
+		string ip = 2;
 	}
 
 	repeated Receiver receivers = 1;
-	}
+}
 
-message SendRequest {
+message ChooseReceiverRequest {
+	// receiver id
+	string id = 1;
+}
+
+message ChooseReceiverResponse {
+	// content id
+	string id = 1;
+}
+
+message TransferContent {
 	bytes data = 1;
+	repeated int64 range = 2;
 }
 
 message ReceiveRequest {
-	string id = 2;
+	string id = 1;
 }
 
-message ReceiveResponse {
-	bytes data = 1;
-}

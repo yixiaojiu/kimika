@@ -40,41 +40,29 @@ export namespace EmptyResponse {
     }
 }
 
-export class RegisterRequest extends jspb.Message { 
+export class RegisterReceiverRequest extends jspb.Message { 
     getAlias(): string;
-    setAlias(value: string): RegisterRequest;
+    setAlias(value: string): RegisterReceiverRequest;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): RegisterRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: RegisterRequest): RegisterRequest.AsObject;
+    toObject(includeInstance?: boolean): RegisterReceiverRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: RegisterReceiverRequest): RegisterReceiverRequest.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: RegisterRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): RegisterRequest;
-    static deserializeBinaryFromReader(message: RegisterRequest, reader: jspb.BinaryReader): RegisterRequest;
+    static serializeBinaryToWriter(message: RegisterReceiverRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): RegisterReceiverRequest;
+    static deserializeBinaryFromReader(message: RegisterReceiverRequest, reader: jspb.BinaryReader): RegisterReceiverRequest;
 }
 
-export namespace RegisterRequest {
+export namespace RegisterReceiverRequest {
     export type AsObject = {
         alias: string,
     }
 }
 
 export class RegisterResponse extends jspb.Message { 
-    getContentType(): RegisterResponse.Type;
-    setContentType(value: RegisterResponse.Type): RegisterResponse;
     getId(): string;
     setId(value: string): RegisterResponse;
-
-    hasSize(): boolean;
-    clearSize(): void;
-    getSize(): number | undefined;
-    setSize(value: number): RegisterResponse;
-
-    hasName(): boolean;
-    clearName(): void;
-    getName(): string | undefined;
-    setName(value: string): RegisterResponse;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): RegisterResponse.AsObject;
@@ -88,39 +76,80 @@ export class RegisterResponse extends jspb.Message {
 
 export namespace RegisterResponse {
     export type AsObject = {
-        contentType: RegisterResponse.Type,
         id: string,
+    }
+}
+
+export class RegisterContentRequest extends jspb.Message { 
+    getContentType(): Type;
+    setContentType(value: Type): RegisterContentRequest;
+    getAlias(): string;
+    setAlias(value: string): RegisterContentRequest;
+
+    hasSize(): boolean;
+    clearSize(): void;
+    getSize(): number | undefined;
+    setSize(value: number): RegisterContentRequest;
+
+    hasName(): boolean;
+    clearName(): void;
+    getName(): string | undefined;
+    setName(value: string): RegisterContentRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): RegisterContentRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: RegisterContentRequest): RegisterContentRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: RegisterContentRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): RegisterContentRequest;
+    static deserializeBinaryFromReader(message: RegisterContentRequest, reader: jspb.BinaryReader): RegisterContentRequest;
+}
+
+export namespace RegisterContentRequest {
+    export type AsObject = {
+        contentType: Type,
+        alias: string,
         size?: number,
         name?: string,
     }
-
-    export enum Type {
-    FILE = 0,
-    MESSAGE = 1,
-    }
-
 }
 
-export class GetReceiversRequest extends jspb.Message { 
+export class GetContentReponse extends jspb.Message { 
+    getContentType(): Type;
+    setContentType(value: Type): GetContentReponse;
+    getAlias(): string;
+    setAlias(value: string): GetContentReponse;
+    getIp(): string;
+    setIp(value: string): GetContentReponse;
 
-    hasAlias(): boolean;
-    clearAlias(): void;
-    getAlias(): string | undefined;
-    setAlias(value: string): GetReceiversRequest;
+    hasSize(): boolean;
+    clearSize(): void;
+    getSize(): number | undefined;
+    setSize(value: number): GetContentReponse;
+
+    hasName(): boolean;
+    clearName(): void;
+    getName(): string | undefined;
+    setName(value: string): GetContentReponse;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): GetReceiversRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: GetReceiversRequest): GetReceiversRequest.AsObject;
+    toObject(includeInstance?: boolean): GetContentReponse.AsObject;
+    static toObject(includeInstance: boolean, msg: GetContentReponse): GetContentReponse.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: GetReceiversRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): GetReceiversRequest;
-    static deserializeBinaryFromReader(message: GetReceiversRequest, reader: jspb.BinaryReader): GetReceiversRequest;
+    static serializeBinaryToWriter(message: GetContentReponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetContentReponse;
+    static deserializeBinaryFromReader(message: GetContentReponse, reader: jspb.BinaryReader): GetContentReponse;
 }
 
-export namespace GetReceiversRequest {
+export namespace GetContentReponse {
     export type AsObject = {
-        alias?: string,
+        contentType: Type,
+        alias: string,
+        ip: string,
+        size?: number,
+        name?: string,
     }
 }
 
@@ -149,8 +178,8 @@ export namespace GetReceiversResponse {
     export class Receiver extends jspb.Message { 
         getAlias(): string;
         setAlias(value: string): Receiver;
-        getId(): string;
-        setId(value: string): Receiver;
+        getIp(): string;
+        setIp(value: string): Receiver;
 
         serializeBinary(): Uint8Array;
         toObject(includeInstance?: boolean): Receiver.AsObject;
@@ -165,31 +194,76 @@ export namespace GetReceiversResponse {
     export namespace Receiver {
         export type AsObject = {
             alias: string,
-            id: string,
+            ip: string,
         }
     }
 
 }
 
-export class SendRequest extends jspb.Message { 
+export class ChooseReceiverRequest extends jspb.Message { 
+    getId(): string;
+    setId(value: string): ChooseReceiverRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ChooseReceiverRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ChooseReceiverRequest): ChooseReceiverRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ChooseReceiverRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ChooseReceiverRequest;
+    static deserializeBinaryFromReader(message: ChooseReceiverRequest, reader: jspb.BinaryReader): ChooseReceiverRequest;
+}
+
+export namespace ChooseReceiverRequest {
+    export type AsObject = {
+        id: string,
+    }
+}
+
+export class ChooseReceiverResponse extends jspb.Message { 
+    getId(): string;
+    setId(value: string): ChooseReceiverResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ChooseReceiverResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ChooseReceiverResponse): ChooseReceiverResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ChooseReceiverResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ChooseReceiverResponse;
+    static deserializeBinaryFromReader(message: ChooseReceiverResponse, reader: jspb.BinaryReader): ChooseReceiverResponse;
+}
+
+export namespace ChooseReceiverResponse {
+    export type AsObject = {
+        id: string,
+    }
+}
+
+export class TransferContent extends jspb.Message { 
     getData(): Uint8Array | string;
     getData_asU8(): Uint8Array;
     getData_asB64(): string;
-    setData(value: Uint8Array | string): SendRequest;
+    setData(value: Uint8Array | string): TransferContent;
+    clearRangeList(): void;
+    getRangeList(): Array<number>;
+    setRangeList(value: Array<number>): TransferContent;
+    addRange(value: number, index?: number): number;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): SendRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: SendRequest): SendRequest.AsObject;
+    toObject(includeInstance?: boolean): TransferContent.AsObject;
+    static toObject(includeInstance: boolean, msg: TransferContent): TransferContent.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: SendRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): SendRequest;
-    static deserializeBinaryFromReader(message: SendRequest, reader: jspb.BinaryReader): SendRequest;
+    static serializeBinaryToWriter(message: TransferContent, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): TransferContent;
+    static deserializeBinaryFromReader(message: TransferContent, reader: jspb.BinaryReader): TransferContent;
 }
 
-export namespace SendRequest {
+export namespace TransferContent {
     export type AsObject = {
         data: Uint8Array | string,
+        rangeList: Array<number>,
     }
 }
 
@@ -213,24 +287,7 @@ export namespace ReceiveRequest {
     }
 }
 
-export class ReceiveResponse extends jspb.Message { 
-    getData(): Uint8Array | string;
-    getData_asU8(): Uint8Array;
-    getData_asB64(): string;
-    setData(value: Uint8Array | string): ReceiveResponse;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ReceiveResponse.AsObject;
-    static toObject(includeInstance: boolean, msg: ReceiveResponse): ReceiveResponse.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ReceiveResponse, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ReceiveResponse;
-    static deserializeBinaryFromReader(message: ReceiveResponse, reader: jspb.BinaryReader): ReceiveResponse;
-}
-
-export namespace ReceiveResponse {
-    export type AsObject = {
-        data: Uint8Array | string,
-    }
+export enum Type {
+    FILE = 0,
+    MESSAGE = 1,
 }

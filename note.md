@@ -44,5 +44,5 @@ address = 127.0.0.1:3939
 6. 发送端调用 `RegisterContent` 注册需要发送的内容，服务器返回 id
 7. 发送端调用 `GetReceivers`，服务器返回数据流
 8. 发送端选择接收端，调用 `ChooseReceiver`，服务器返回 `GetContent` 响应
-9. 发送端调用 `Receive`，传入 `Content id`，服务端响应 `ChooseReceiver`
+9. 发送端调用 `Receive`，传入 `Content id`，服务端响应 `ChooseReceiver`，返回响应的 `Content id`
 10. 发送端调用 `Send`

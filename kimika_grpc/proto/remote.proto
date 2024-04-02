@@ -5,15 +5,17 @@ service Remote {
 
 	rpc RegisterReceiver(RegisterReceiverRequest) returns (RegisterResponse);
 
-	rpc RegisterContent(RegisterContent) returns (RegisterResponse);
+	rpc RegisterContent(Content) returns (RegisterResponse);
 
-	rpc GetContent(EmptyRequest) returns (stream RegisterContent);
+	rpc GetContent(EmptyRequest) returns (stream Content);
 
 	rpc GetReceivers(EmptyRequest) returns (stream GetReceiversResponse);
 
-	rpc Send(stream SendRequest) returns (EmptyResponse);
+	rpc ChooseReceiver(ChooseReceiverRequest) returns (stream ChooseReceiverResponse);
 
-	rpc Receive(ReceiveRequest) returns (stream ReceiveResponse);
+	rpc Send(stream TransferContent) returns (EmptyResponse);
+
+	rpc Receive(ReceiveRequest) returns (stream TransferContent);
 }
 
 message EmptyRequest {
@@ -30,7 +32,7 @@ message RegisterResponse {
 	string id = 1;
 }
 
-message RegisterContent {
+message Content {
 
 	enum Type {
 		FILE = 0;
@@ -53,14 +55,21 @@ message GetReceiversResponse {
 	repeated Receiver receivers = 1;
 }
 
-message SendRequest {
+message ChooseReceiverRequest {
+	string id = 1;
+}
+
+message ChooseReceiverResponse {
+	string id = 1;
+}
+
+message TransferContent {
 	bytes data = 1;
+	repeated int32 range = 2;
 }
 
 message ReceiveRequest {
 	string id = 1;
 }
 
-message ReceiveResponse {
-	bytes data = 1;
-}
+
