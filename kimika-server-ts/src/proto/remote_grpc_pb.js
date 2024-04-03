@@ -59,6 +59,17 @@ function deserialize_remote_GetContentReponse(buffer_arg) {
   return remote_pb.GetContentReponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_remote_GetContentRequest(arg) {
+  if (!(arg instanceof remote_pb.GetContentRequest)) {
+    throw new Error('Expected argument of type remote.GetContentRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_remote_GetContentRequest(buffer_arg) {
+  return remote_pb.GetContentRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_remote_GetReceiversResponse(arg) {
   if (!(arg instanceof remote_pb.GetReceiversResponse)) {
     throw new Error('Expected argument of type remote.GetReceiversResponse');
@@ -92,6 +103,17 @@ function deserialize_remote_RegisterContentRequest(buffer_arg) {
   return remote_pb.RegisterContentRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_remote_RegisterContentResponse(arg) {
+  if (!(arg instanceof remote_pb.RegisterContentResponse)) {
+    throw new Error('Expected argument of type remote.RegisterContentResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_remote_RegisterContentResponse(buffer_arg) {
+  return remote_pb.RegisterContentResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_remote_RegisterReceiverRequest(arg) {
   if (!(arg instanceof remote_pb.RegisterReceiverRequest)) {
     throw new Error('Expected argument of type remote.RegisterReceiverRequest');
@@ -103,15 +125,15 @@ function deserialize_remote_RegisterReceiverRequest(buffer_arg) {
   return remote_pb.RegisterReceiverRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_remote_RegisterResponse(arg) {
-  if (!(arg instanceof remote_pb.RegisterResponse)) {
-    throw new Error('Expected argument of type remote.RegisterResponse');
+function serialize_remote_RegisterReceiverResponse(arg) {
+  if (!(arg instanceof remote_pb.RegisterReceiverResponse)) {
+    throw new Error('Expected argument of type remote.RegisterReceiverResponse');
   }
   return Buffer.from(arg.serializeBinary());
 }
 
-function deserialize_remote_RegisterResponse(buffer_arg) {
-  return remote_pb.RegisterResponse.deserializeBinary(new Uint8Array(buffer_arg));
+function deserialize_remote_RegisterReceiverResponse(buffer_arg) {
+  return remote_pb.RegisterReceiverResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_remote_TransferContent(arg) {
@@ -132,31 +154,31 @@ var RemoteService = exports.RemoteService = {
     requestStream: false,
     responseStream: false,
     requestType: remote_pb.RegisterReceiverRequest,
-    responseType: remote_pb.RegisterResponse,
+    responseType: remote_pb.RegisterReceiverResponse,
     requestSerialize: serialize_remote_RegisterReceiverRequest,
     requestDeserialize: deserialize_remote_RegisterReceiverRequest,
-    responseSerialize: serialize_remote_RegisterResponse,
-    responseDeserialize: deserialize_remote_RegisterResponse,
+    responseSerialize: serialize_remote_RegisterReceiverResponse,
+    responseDeserialize: deserialize_remote_RegisterReceiverResponse,
   },
   registerContent: {
     path: '/remote.Remote/RegisterContent',
     requestStream: false,
     responseStream: false,
     requestType: remote_pb.RegisterContentRequest,
-    responseType: remote_pb.RegisterResponse,
+    responseType: remote_pb.RegisterContentResponse,
     requestSerialize: serialize_remote_RegisterContentRequest,
     requestDeserialize: deserialize_remote_RegisterContentRequest,
-    responseSerialize: serialize_remote_RegisterResponse,
-    responseDeserialize: deserialize_remote_RegisterResponse,
+    responseSerialize: serialize_remote_RegisterContentResponse,
+    responseDeserialize: deserialize_remote_RegisterContentResponse,
   },
   getContent: {
     path: '/remote.Remote/GetContent',
     requestStream: false,
     responseStream: true,
-    requestType: remote_pb.EmptyRequest,
+    requestType: remote_pb.GetContentRequest,
     responseType: remote_pb.GetContentReponse,
-    requestSerialize: serialize_remote_EmptyRequest,
-    requestDeserialize: deserialize_remote_EmptyRequest,
+    requestSerialize: serialize_remote_GetContentRequest,
+    requestDeserialize: deserialize_remote_GetContentRequest,
     responseSerialize: serialize_remote_GetContentReponse,
     responseDeserialize: deserialize_remote_GetContentReponse,
   },

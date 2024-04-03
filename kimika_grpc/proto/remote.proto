@@ -3,11 +3,11 @@ package remote;
 
 service Remote {
 
-	rpc RegisterReceiver(RegisterReceiverRequest) returns (RegisterResponse);
+	rpc RegisterReceiver(RegisterReceiverRequest) returns (RegisterReceiverResponse);
 
-	rpc RegisterContent(Content) returns (RegisterResponse);
+	rpc RegisterContent(RegisterContentRequest) returns (RegisterContentResponse);
 
-	rpc GetContent(EmptyRequest) returns (stream Content);
+	rpc GetContent(GetContentRequest) returns (stream GetContentReponse);
 
 	rpc GetReceivers(EmptyRequest) returns (stream GetReceiversResponse);
 
@@ -28,48 +28,86 @@ message RegisterReceiverRequest {
 	string alias = 1;
 }
 
-message RegisterResponse {
-	string id = 1;
+message RegisterReceiverResponse {
+	string receiver_id = 1;
 }
 
-message Content {
+message RegisterContentResponse {
+	string content_id = 1;
+	string sender_id = 2;
+}
 
-	enum Type {
-		FILE = 0;
-		MESSAGE = 1;
-	}
+enum Type {
+	FILE = 0;
+	MESSAGE = 1;
+}
 
+message RegisterContentRequest {
 	Type content_type = 1;
+
+	// sender alias
+	string alias = 2;
 
 	optional int64 size = 3;
 
 	optional string name = 4;
 }
 
+message GetContentRequest {
+	// receiver id
+	string receiver_id = 1;
+}
+
+message GetContentReponse {
+	message Content {
+		Type content_type = 1;
+
+		// sender alias
+		string alias = 2;
+
+		string ip = 3;
+
+		string sender_id = 4;
+
+		string content_id = 5;
+
+		optional int64 size = 6;
+
+		optional string name = 7;
+	}
+
+	repeated Content content_list = 1;
+}
+
 message GetReceiversResponse {
 	message Receiver {
 		string alias = 1;
 		string ip = 2;
+		string receiver_id = 3;
 	}
 
 	repeated Receiver receivers = 1;
 }
 
 message ChooseReceiverRequest {
-	string id = 1;
+	string receiver_id = 1;
+
+	string sender_id = 2;
 }
 
 message ChooseReceiverResponse {
-	string id = 1;
+	string content_id = 1;
+
+	string receiver_id = 2;
 }
 
 message TransferContent {
 	bytes data = 1;
-	repeated int32 range = 2;
+	repeated int64 range = 2;
 }
 
 message ReceiveRequest {
-	string id = 1;
+	string receiver_id = 1;
+
+	string content_id = 2;
 }
-
-
