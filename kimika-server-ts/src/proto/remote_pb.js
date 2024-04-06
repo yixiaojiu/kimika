@@ -1055,7 +1055,7 @@ proto.remote.RegisterContentRequest.deserializeBinaryFromReader = function(msg, 
       msg.setAlias(value);
       break;
     case 3:
-      var value = /** @type {number} */ (reader.readInt64());
+      var value = /** @type {number} */ (reader.readUint64());
       msg.setSize(value);
       break;
     case 4:
@@ -1107,7 +1107,7 @@ proto.remote.RegisterContentRequest.serializeBinaryToWriter = function(message, 
   }
   f = /** @type {number} */ (jspb.Message.getField(message, 3));
   if (f != null) {
-    writer.writeInt64(
+    writer.writeUint64(
       3,
       f
     );
@@ -1159,7 +1159,7 @@ proto.remote.RegisterContentRequest.prototype.setAlias = function(value) {
 
 
 /**
- * optional int64 size = 3;
+ * optional uint64 size = 3;
  * @return {number}
  */
 proto.remote.RegisterContentRequest.prototype.getSize = function() {
@@ -1578,7 +1578,7 @@ proto.remote.GetContentReponse.Content.deserializeBinaryFromReader = function(ms
       msg.setContentId(value);
       break;
     case 6:
-      var value = /** @type {number} */ (reader.readInt64());
+      var value = /** @type {number} */ (reader.readUint64());
       msg.setSize(value);
       break;
     case 7:
@@ -1651,7 +1651,7 @@ proto.remote.GetContentReponse.Content.serializeBinaryToWriter = function(messag
   }
   f = /** @type {number} */ (jspb.Message.getField(message, 6));
   if (f != null) {
-    writer.writeInt64(
+    writer.writeUint64(
       6,
       f
     );
@@ -1757,7 +1757,7 @@ proto.remote.GetContentReponse.Content.prototype.setContentId = function(value) 
 
 
 /**
- * optional int64 size = 6;
+ * optional uint64 size = 6;
  * @return {number}
  */
 proto.remote.GetContentReponse.Content.prototype.getSize = function() {

@@ -48,7 +48,7 @@ message RegisterContentRequest {
 	// sender alias
 	string alias = 2;
 
-	optional int64 size = 3;
+	optional uint64 size = 3;
 
 	optional string name = 4;
 }
@@ -71,7 +71,7 @@ message GetContentReponse {
 
 		string content_id = 5;
 
-		optional int64 size = 6;
+		optional uint64 size = 6;
 
 		optional string name = 7;
 	}
@@ -111,3 +111,4 @@ message ReceiveRequest {
 
 	string content_id = 2;
 }
+

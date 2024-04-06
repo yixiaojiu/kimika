@@ -19,8 +19,3 @@ interface Content {
 export const receiverMap = new Map<string, Receiver>();
 
 export const contentMap = new Map<string, Content>();
-
-export const senderMap = new Map<string, string[]>();
-
-// contentId
-export const streamMap = new Map<string, string>();

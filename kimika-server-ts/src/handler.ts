@@ -1,7 +1,7 @@
 import * as grpc from '@grpc/grpc-js';
 import remote_pb from './proto/remote_pb';
 import { nanoid } from 'nanoid';
-import { receiverMap, contentMap, senderMap } from './state';
+import { receiverMap, contentMap } from './state';
 import { onReceiver, emitReceiver, onContent, emitContent, onSender, emitSender, onStream, emitStream } from './events';
 
 function registerReceiver(
@@ -28,7 +28,6 @@ function registerContent(
   let contentId = nanoid();
   const senderId = nanoid();
   contentMap.set(contentId, { ...content, ip, senderId, contentId });
-  senderMap.set(senderId, [contentId]);
   res.setContentId(contentId);
   res.setSenderId(senderId);
   callback(null, res);
@@ -64,12 +63,7 @@ async function getContent(call: grpc.ServerWritableStream<remote_pb.GetContentRe
       break;
     }
 
-    const contentIdList = senderMap.get(senderId);
-    if (!contentIdList) {
-      break;
-    }
-
-    const contentList = contentIdList.map(item => contentMap.get(item)!);
+    const contentList = Array.from(contentMap.values()).filter(item => item.senderId === senderId);
 
     const res = new remote_pb.GetContentReponse();
     res.setContentListList(
@@ -125,6 +119,8 @@ async function receive(call: grpc.ServerWritableStream<remote_pb.ReceiveRequest,
 
   stream.on('end', () => {
     call.end();
+    receiverMap.delete(receiverId);
+    contentMap.delete(contentId);
   });
 }
 
@@ -137,6 +133,7 @@ async function send(
   call.on('end', () => {
     const res = new remote_pb.EmptyResponse();
     callback(null, res);
+    contentMap.delete(contentId);
   });
 }
 

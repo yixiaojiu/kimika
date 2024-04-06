@@ -1,5 +1,4 @@
 import remote_grpc from './src/proto/remote_grpc_pb';
-import remote from './src/proto/remote_pb';
 // cjs import
 import * as grpc from '@grpc/grpc-js';
 import handler from './src/handler';

@@ -1,6 +1,6 @@
-use super::grpc::{send_file, send_message};
+use super::local_grpc::{send_file, send_message};
 use super::udp::{bind_udp, broadcast, close_receiver, find_receiver};
-use super::SendArgs;
+use super::{utils, SendArgs};
 use crate::utils::{
     color::{print_color, Color},
     stdin_to_string,
@@ -12,24 +12,13 @@ use tokio::sync::oneshot::channel;
 use tonic::transport::Uri;
 
 pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
-    if args.path.is_none() && args.message.is_none() && !args.input {
-        print_color("Please specify a file or a message", Color::Yellow);
-        return Ok(());
-    }
-
-    let message = if let Some(message) = &args.message {
-        message.clone()
-    } else if args.input {
-        stdin_to_string().trim_end().to_string()
-    } else {
-        String::new()
-    };
+    let message = utils::handle_message(args);
 
     let socket = bind_udp(args.port).await?;
     let socket_clone = Arc::clone(&socket);
 
-    let address = if let Some(target) = &args.target {
-        target
+    let address = if let Some(address) = &args.address {
+        address
             .parse::<SocketAddr>()
             .expect("invalid target address")
     } else {
@@ -54,11 +43,11 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
         .expect("connect receiver failed");
 
     if args.message.is_some() {
-        send_message(&mut client, message.clone()).await;
+        send_message(&mut client, message.clone().unwrap()).await;
     }
 
     if args.input && args.message.is_none() {
-        send_message(&mut client, message).await;
+        send_message(&mut client, message.unwrap()).await;
     }
 
     if let Some(path) = &args.path {
