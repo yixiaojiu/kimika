@@ -1,5 +1,5 @@
-mod grpc;
 mod local;
+mod local_grpc;
 mod udp;
 
 use clap::Args;

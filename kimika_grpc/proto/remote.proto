@@ -13,6 +13,7 @@ service Remote {
 
 	rpc ChooseReceiver(ChooseReceiverRequest) returns (stream ChooseReceiverResponse);
 
+	// set content_id in metadata
 	rpc Send(stream TransferContent) returns (EmptyResponse);
 
 	rpc Receive(ReceiveRequest) returns (stream TransferContent);
@@ -103,7 +104,8 @@ message ChooseReceiverResponse {
 
 message TransferContent {
 	bytes data = 1;
-	repeated int64 range = 2;
+	// The range of the array is closed on the left and open on the right
+	repeated uint64 range = 2;
 }
 
 message ReceiveRequest {

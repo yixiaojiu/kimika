@@ -1,12 +1,12 @@
-pub fn paint_green(text: &str) -> String {
+pub fn paint_green<T: std::fmt::Display>(text: T) -> String {
     format!("\x1b[32m{}\x1b[0m", text)
 }
 
-pub fn paint_yellow(text: &str) -> String {
+pub fn paint_yellow<T: std::fmt::Display>(text: T) -> String {
     format!("\x1b[33m{}\x1b[0m", text)
 }
 
-pub fn paint_red(text: &str) -> String {
+pub fn paint_red<T: std::fmt::Display>(text: T) -> String {
     format!("\x1b[31m{}\x1b[0m", text)
 }
 

@@ -1,5 +1,5 @@
 use super::{remote_grpc, utils, SendArgs};
-use crate::utils::color::{print_color, Color};
+use crate::utils::color::{self, print_color, Color};
 use std::{net::SocketAddr, path::PathBuf};
 
 #[warn(dead_code)]
@@ -45,6 +45,38 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
     let register_res = remote_grpc::register_content(&mut client, &content)
         .await
         .expect("register content failed");
+
+    let mut receiver_res = remote_grpc::get_receivers(&mut client)
+        .await
+        .expect("get receivers failed");
+
+    let mut receiver_id = String::new();
+    let sender_id = register_res.sender_id;
+    let content_id = register_res.content_id;
+
+    while let Some(res) = receiver_res.message().await? {
+        let receiver_iter = res.receivers.iter().map(|receiver| {
+            receiver_id = receiver.receiver_id.clone();
+            color::paint_green(format!("{} {}", receiver.ip, receiver.alias))
+        });
+
+        for receiver in receiver_iter {
+            println!("{}", receiver);
+        }
+    }
+
+    let mut choose_res =
+        remote_grpc::choose_receiver(&mut client, receiver_id.clone(), sender_id.clone())
+            .await
+            .expect("request choose receiver failed");
+
+    while let Some(res) = choose_res.message().await? {
+        println!("start sending, receiver_id: {}", res.receiver_id);
+    }
+
+    remote_grpc::send(&mut client, content_id, &content)
+        .await
+        .expect("send content failed");
 
     Ok(())
 }

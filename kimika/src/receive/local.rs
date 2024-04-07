@@ -1,5 +1,5 @@
 use super::udp::listen_boardcast;
-use super::{grpc::LocalService, ReceiveArgs};
+use super::{local_grpc::LocalService, ReceiveArgs};
 use kimika_grpc::local::local_server::LocalServer;
 use std::net::{Ipv4Addr, SocketAddrV4};
 use tokio::sync::mpsc::channel;
