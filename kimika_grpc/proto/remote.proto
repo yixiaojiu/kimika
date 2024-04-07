@@ -7,7 +7,7 @@ service Remote {
 
 	rpc RegisterContent(RegisterContentRequest) returns (RegisterContentResponse);
 
-	rpc GetContent(GetContentRequest) returns (stream GetContentReponse);
+	rpc GetContent(GetContentRequest) returns (stream GetContentResponse);
 
 	rpc GetReceivers(EmptyRequest) returns (stream GetReceiversResponse);
 
@@ -59,7 +59,7 @@ message GetContentRequest {
 	string receiver_id = 1;
 }
 
-message GetContentReponse {
+message GetContentResponse {
 	message Content {
 		Type content_type = 1;
 

@@ -48,17 +48,6 @@ function deserialize_remote_EmptyResponse(buffer_arg) {
   return remote_pb.EmptyResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_remote_GetContentReponse(arg) {
-  if (!(arg instanceof remote_pb.GetContentReponse)) {
-    throw new Error('Expected argument of type remote.GetContentReponse');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_remote_GetContentReponse(buffer_arg) {
-  return remote_pb.GetContentReponse.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
 function serialize_remote_GetContentRequest(arg) {
   if (!(arg instanceof remote_pb.GetContentRequest)) {
     throw new Error('Expected argument of type remote.GetContentRequest');
@@ -68,6 +57,17 @@ function serialize_remote_GetContentRequest(arg) {
 
 function deserialize_remote_GetContentRequest(buffer_arg) {
   return remote_pb.GetContentRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_remote_GetContentResponse(arg) {
+  if (!(arg instanceof remote_pb.GetContentResponse)) {
+    throw new Error('Expected argument of type remote.GetContentResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_remote_GetContentResponse(buffer_arg) {
+  return remote_pb.GetContentResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_remote_GetReceiversResponse(arg) {
@@ -176,11 +176,11 @@ var RemoteService = exports.RemoteService = {
     requestStream: false,
     responseStream: true,
     requestType: remote_pb.GetContentRequest,
-    responseType: remote_pb.GetContentReponse,
+    responseType: remote_pb.GetContentResponse,
     requestSerialize: serialize_remote_GetContentRequest,
     requestDeserialize: deserialize_remote_GetContentRequest,
-    responseSerialize: serialize_remote_GetContentReponse,
-    responseDeserialize: deserialize_remote_GetContentReponse,
+    responseSerialize: serialize_remote_GetContentResponse,
+    responseDeserialize: deserialize_remote_GetContentResponse,
   },
   getReceivers: {
     path: '/remote.Remote/GetReceivers',
@@ -204,7 +204,8 @@ var RemoteService = exports.RemoteService = {
     responseSerialize: serialize_remote_ChooseReceiverResponse,
     responseDeserialize: deserialize_remote_ChooseReceiverResponse,
   },
-  send: {
+  // set content_id in metadata
+send: {
     path: '/remote.Remote/Send',
     requestStream: true,
     responseStream: false,

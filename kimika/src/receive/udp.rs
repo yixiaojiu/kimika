@@ -6,7 +6,7 @@ use tokio::net::UdpSocket;
 
 pub async fn listen_boardcast(
     address: &SocketAddrV4,
-    alias: &str,
+    alias: &String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let socket = UdpSocket::bind(address).await?;
     socket.set_broadcast(true)?;
@@ -19,7 +19,7 @@ pub async fn listen_boardcast(
         match action {
             Action::Broadcast => {
                 let message = Register {
-                    alias: alias.to_string(),
+                    alias: alias.clone(),
                 };
                 let buf = serialize(&message)?;
                 socket.send_to(&buf, &address).await?;

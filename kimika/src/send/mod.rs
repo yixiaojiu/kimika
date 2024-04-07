@@ -20,7 +20,7 @@ pub struct SendArgs {
     pub message: Option<String>,
 
     /// receiver address or remote server address. Such as: example.com
-    #[arg(short, long, value_name = "target")]
+    #[arg(short, long, value_name = "address")]
     pub address: Option<String>,
 
     #[arg(long, default_value = "3939", value_name = "port")]

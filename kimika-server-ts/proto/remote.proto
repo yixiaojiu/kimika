@@ -7,12 +7,13 @@ service Remote {
 
 	rpc RegisterContent(RegisterContentRequest) returns (RegisterContentResponse);
 
-	rpc GetContent(GetContentRequest) returns (stream GetContentReponse);
+	rpc GetContent(GetContentRequest) returns (stream GetContentResponse);
 
 	rpc GetReceivers(EmptyRequest) returns (stream GetReceiversResponse);
 
 	rpc ChooseReceiver(ChooseReceiverRequest) returns (stream ChooseReceiverResponse);
 
+	// set content_id in metadata
 	rpc Send(stream TransferContent) returns (EmptyResponse);
 
 	rpc Receive(ReceiveRequest) returns (stream TransferContent);
@@ -58,7 +59,7 @@ message GetContentRequest {
 	string receiver_id = 1;
 }
 
-message GetContentReponse {
+message GetContentResponse {
 	message Content {
 		Type content_type = 1;
 
@@ -103,7 +104,8 @@ message ChooseReceiverResponse {
 
 message TransferContent {
 	bytes data = 1;
-	repeated int64 range = 2;
+	// The range of the array is closed on the left and open on the right
+	repeated uint64 range = 2;
 }
 
 message ReceiveRequest {

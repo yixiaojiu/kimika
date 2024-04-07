@@ -158,25 +158,25 @@ export namespace GetContentRequest {
     }
 }
 
-export class GetContentReponse extends jspb.Message { 
+export class GetContentResponse extends jspb.Message { 
     clearContentListList(): void;
-    getContentListList(): Array<GetContentReponse.Content>;
-    setContentListList(value: Array<GetContentReponse.Content>): GetContentReponse;
-    addContentList(value?: GetContentReponse.Content, index?: number): GetContentReponse.Content;
+    getContentListList(): Array<GetContentResponse.Content>;
+    setContentListList(value: Array<GetContentResponse.Content>): GetContentResponse;
+    addContentList(value?: GetContentResponse.Content, index?: number): GetContentResponse.Content;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): GetContentReponse.AsObject;
-    static toObject(includeInstance: boolean, msg: GetContentReponse): GetContentReponse.AsObject;
+    toObject(includeInstance?: boolean): GetContentResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: GetContentResponse): GetContentResponse.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: GetContentReponse, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): GetContentReponse;
-    static deserializeBinaryFromReader(message: GetContentReponse, reader: jspb.BinaryReader): GetContentReponse;
+    static serializeBinaryToWriter(message: GetContentResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetContentResponse;
+    static deserializeBinaryFromReader(message: GetContentResponse, reader: jspb.BinaryReader): GetContentResponse;
 }
 
-export namespace GetContentReponse {
+export namespace GetContentResponse {
     export type AsObject = {
-        contentListList: Array<GetContentReponse.Content.AsObject>,
+        contentListList: Array<GetContentResponse.Content.AsObject>,
     }
 
 

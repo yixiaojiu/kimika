@@ -1,7 +1,7 @@
 use kimika_grpc::local::local_server::Local;
 use kimika_grpc::local::{EmptyRequest, EmptyResponse, FileRequest, MessageRequest};
 use kimika_shared::type_utils::TonicRes;
-use std::path::Path;
+use std::path::PathBuf;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tokio_stream::StreamExt;
@@ -9,19 +9,14 @@ use tonic::{Request, Response};
 
 pub struct LocalService {
     tx: tokio::sync::mpsc::Sender<()>,
-    save_folder: Option<String>,
+    save_folder: PathBuf,
 }
 
 impl LocalService {
-    pub fn new(tx: tokio::sync::mpsc::Sender<()>, save_folder: String) -> Self {
-        let path = if save_folder == "" {
-            None
-        } else {
-            Some(save_folder)
-        };
+    pub fn new(tx: tokio::sync::mpsc::Sender<()>, save_folder: &PathBuf) -> Self {
         LocalService {
             tx,
-            save_folder: path,
+            save_folder: save_folder.clone(),
         }
     }
 
@@ -50,11 +45,8 @@ impl Local for LocalService {
         let file_metadata = request.metadata();
         let filename = file_metadata.get("filename").unwrap().to_str().unwrap();
 
-        let mut path = if let Some(save_folder) = &self.save_folder {
-            Path::new(save_folder).join(filename)
-        } else {
-            Path::new(filename).to_path_buf()
-        };
+        let mut path = self.save_folder.clone();
+        path.push(&filename);
 
         let mut rename_num = 1;
         loop {

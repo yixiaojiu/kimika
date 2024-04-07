@@ -55,7 +55,7 @@ async function getReceivers(call: grpc.ServerWritableStream<remote_pb.EmptyReque
   call.end();
 }
 
-async function getContent(call: grpc.ServerWritableStream<remote_pb.GetContentRequest, remote_pb.GetContentReponse>) {
+async function getContent(call: grpc.ServerWritableStream<remote_pb.GetContentRequest, remote_pb.GetContentResponse>) {
   const receiver_id = call.request.getReceiverId();
   while (true) {
     const senderId = await onContent(receiver_id);
@@ -65,10 +65,10 @@ async function getContent(call: grpc.ServerWritableStream<remote_pb.GetContentRe
 
     const contentList = Array.from(contentMap.values()).filter(item => item.senderId === senderId);
 
-    const res = new remote_pb.GetContentReponse();
+    const res = new remote_pb.GetContentResponse();
     res.setContentListList(
       contentList.map(item => {
-        const contentRes = new remote_pb.GetContentReponse.Content();
+        const contentRes = new remote_pb.GetContentResponse.Content();
         contentRes.setContentType(item.contentType);
         contentRes.setAlias(item.alias);
         contentRes.setIp(item.ip);

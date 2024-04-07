@@ -97,6 +97,7 @@ pub async fn send(
             range: vec![0, len as u64],
         })
         .await?;
+        drop(tx);
     }
 
     let mut request = tonic::Request::new(ReceiverStream::new(rx));

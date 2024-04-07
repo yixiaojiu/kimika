@@ -14,10 +14,17 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
     let message = utils::handle_message(args);
 
     let content = if let Some(path) = &args.path {
+        let pathbuf = PathBuf::from(path);
+        let filename = pathbuf
+            .file_name()
+            .expect("invalid file name")
+            .to_str()
+            .unwrap();
         Content {
             message: None,
-            path: Some(PathBuf::from(path)),
-            name: None,
+            path: Some(pathbuf.clone()),
+            name: Some(filename.to_string()),
+            // TODO
             size: None,
         }
     } else {
@@ -63,6 +70,7 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
         for receiver in receiver_iter {
             println!("{}", receiver);
         }
+        break;
     }
 
     let mut choose_res =
@@ -72,6 +80,7 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
 
     while let Some(res) = choose_res.message().await? {
         println!("start sending, receiver_id: {}", res.receiver_id);
+        break;
     }
 
     remote_grpc::send(&mut client, content_id, &content)
