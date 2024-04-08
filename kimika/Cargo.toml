@@ -15,6 +15,7 @@ serde = { version = "1.0.197", features = ["derive"] }
 tokio = { version =  "1.36.0", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "io-util"] }
 tokio-stream = "0.1.15"
 tonic = "0.11.0"
+indicatif = "0.17.8"
 
 [build-dependencies]
 tonic-build = "0.11"

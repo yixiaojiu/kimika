@@ -1,6 +1,6 @@
 use super::{remote_grpc, utils, SendArgs};
 use crate::utils::color::{self, print_color, Color};
-use std::{net::SocketAddr, path::PathBuf};
+use std::{fs, net::SocketAddr, path::PathBuf};
 
 #[warn(dead_code)]
 pub struct Content {
@@ -15,6 +15,13 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
 
     let content = if let Some(path) = &args.path {
         let pathbuf = PathBuf::from(path);
+        if !pathbuf.exists() {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "file not exists",
+            ))?
+        }
+        let metadata = fs::metadata(&pathbuf).expect("get metadata failed");
         let filename = pathbuf
             .file_name()
             .expect("invalid file name")
@@ -24,8 +31,7 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
             message: None,
             path: Some(pathbuf.clone()),
             name: Some(filename.to_string()),
-            // TODO
-            size: None,
+            size: Some(metadata.len()),
         }
     } else {
         Content {

@@ -1,9 +1,9 @@
 use super::remote::Content;
-use kimika_grpc::remote;
-use kimika_grpc::remote::remote_client::RemoteClient;
-use std::net::SocketAddr;
-use tokio::io::AsyncReadExt;
-use tokio::{fs, sync::mpsc};
+use crate::utils;
+use kimika_grpc::remote::{self, remote_client::RemoteClient};
+use std::time::Duration;
+use std::{cmp::min, net::SocketAddr};
+use tokio::{fs, io::AsyncReadExt, sync::mpsc, time};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{
     self,
@@ -73,21 +73,28 @@ pub async fn send(
 
     if content.path.is_some() {
         let mut file = fs::File::open(content.path.as_ref().unwrap()).await?;
+        let filename = content.name.as_ref().unwrap().clone();
+        let total_size = content.size.unwrap();
+        let progreebar = utils::create_progress_bar(total_size, &filename);
         tokio::spawn(async move {
             let mut buf = [0; 1024 * 1024];
-            let index: u64 = 0;
+            let mut uploaded_size: u64 = 0;
             loop {
                 let n = file.read(&mut buf).await.unwrap();
                 if n == 0 {
                     break;
                 }
+                let left = uploaded_size;
+                uploaded_size += n as u64;
                 let req = remote::TransferContent {
                     data: buf[..n].to_vec(),
-                    range: vec![index, index + n as u64],
+                    range: vec![left, uploaded_size],
                 };
                 tx.send(req).await.unwrap();
-                println!("Sent {} MB", n / (1024 * 1024));
+                time::sleep(Duration::from_millis(100)).await;
+                progreebar.set_position(min(uploaded_size, total_size));
             }
+            progreebar.finish_with_message(filename);
         });
     } else {
         let data = content.message.clone().unwrap().as_bytes().to_vec();

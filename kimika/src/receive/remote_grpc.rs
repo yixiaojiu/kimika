@@ -1,4 +1,6 @@
+use crate::utils;
 use kimika_grpc::remote::{self, remote_client::RemoteClient};
+use std::cmp::min;
 use std::{net::SocketAddr, path::PathBuf};
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
@@ -66,14 +68,19 @@ pub async fn receive(
             if !pathbuf.exists() {
                 break;
             }
-            pathbuf.set_file_name(format!("{}({})", filename, rename_num));
+            pathbuf.set_file_name(format!("{}({})", &filename, rename_num));
             rename_num += 1;
         }
+        let total_size = content.size.unwrap();
+        let progreebar = utils::create_progress_bar(total_size, &filename);
         let mut file = fs::File::create(pathbuf).await.expect("create file failed");
+        let mut downloaded_size = 0;
         while let Some(res) = receive_res.message().await? {
             file.write(&res.data).await.expect("write file failed");
-            println!("receiver {} bytes, range: {:?}", res.data.len(), res.range);
+            downloaded_size += res.data.len() as u64;
+            progreebar.set_position(min(downloaded_size, total_size));
         }
+        progreebar.finish_with_message(filename);
     }
 
     Ok(())
