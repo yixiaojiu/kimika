@@ -1,9 +1,10 @@
 import { EventEmitter } from 'events';
 import { Duplex, Writable } from 'stream';
+import { EventChannel } from './eventChannel';
 
 export const newReceiverEmitter = new EventEmitter();
 
-export const contentEmitter = new EventEmitter();
+export const contentChannel = new EventChannel();
 
 export const senderEmitter = new EventEmitter();
 
@@ -17,18 +18,6 @@ export function onReceiver() {
 
 export function emitReceiver() {
   newReceiverEmitter.emit('new');
-}
-
-export function onContent(receiverId: string) {
-  return new Promise<string>(resolve => {
-    contentEmitter.once(receiverId, senderId => {
-      resolve(senderId);
-    });
-  });
-}
-
-export function emitContent(receiverId: string, senderId: string) {
-  contentEmitter.emit(receiverId, senderId);
 }
 
 export function onSender(receiverId: string) {

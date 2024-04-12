@@ -72,6 +72,9 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
             receiver_id = receiver.receiver_id.clone();
             color::paint_green(format!("{} {}", receiver.ip, receiver.alias))
         });
+        if receiver_iter.len() == 0 {
+            continue;
+        }
 
         for receiver in receiver_iter {
             println!("{}", receiver);

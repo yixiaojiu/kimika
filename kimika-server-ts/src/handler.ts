@@ -2,7 +2,7 @@ import * as grpc from '@grpc/grpc-js';
 import remote_pb from './proto/remote_pb';
 import { nanoid } from 'nanoid';
 import { receiverMap, contentMap } from './state';
-import { onReceiver, emitReceiver, onContent, emitContent, onSender, emitSender, onStream, emitStream } from './events';
+import { onReceiver, emitReceiver, contentChannel, onSender, emitSender, onStream, emitStream } from './events';
 
 function registerReceiver(
   call: grpc.ServerUnaryCall<remote_pb.RegisterReceiverRequest, remote_pb.RegisterReceiverResponse>,
@@ -58,7 +58,7 @@ async function getReceivers(call: grpc.ServerWritableStream<remote_pb.EmptyReque
 async function getContent(call: grpc.ServerWritableStream<remote_pb.GetContentRequest, remote_pb.GetContentResponse>) {
   const receiver_id = call.request.getReceiverId();
   while (true) {
-    const senderId = await onContent(receiver_id);
+    const senderId = await contentChannel.on<string>(receiver_id);
     if (!call.writable) {
       break;
     }
@@ -93,7 +93,7 @@ async function chooseReceiver(
 ) {
   const receiverId = call.request.getReceiverId();
   const senderId = call.request.getSenderId();
-  emitContent(receiverId, senderId);
+  contentChannel.emit(receiverId, senderId);
 
   while (true) {
     const contentId = await onSender(receiverId);

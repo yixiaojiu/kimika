@@ -3,6 +3,7 @@ use crate::utils;
 use kimika_grpc::remote::{self, remote_client::RemoteClient};
 use std::time::Duration;
 use std::{cmp::min, net::SocketAddr};
+// use
 use tokio::{fs, io::AsyncReadExt, sync::mpsc, time};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{
@@ -91,7 +92,9 @@ pub async fn send(
                     range: vec![left, uploaded_size],
                 };
                 tx.send(req).await.unwrap();
-                time::sleep(Duration::from_millis(100)).await;
+                if cfg!(debug_assertions) {
+                    time::sleep(Duration::from_millis(100)).await;
+                }
                 progreebar.set_position(min(uploaded_size, total_size));
             }
             progreebar.finish_with_message(filename);
