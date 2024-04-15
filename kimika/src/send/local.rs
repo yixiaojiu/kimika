@@ -1,6 +1,7 @@
 use super::local_grpc::{send_file, send_message};
 use super::udp::{bind_udp, broadcast, close_receiver, find_receiver};
 use super::{utils, SendArgs};
+use crate::config;
 use crate::utils::{
     color::{print_color, Color},
     stdin_to_string,
@@ -11,10 +12,16 @@ use std::sync::Arc;
 use tokio::sync::oneshot::channel;
 use tonic::transport::Uri;
 
-pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn local_send(
+    args: &SendArgs,
+    config: &config::Config,
+) -> Result<(), Box<dyn std::error::Error>> {
     let message = utils::handle_message(args);
 
-    let socket = bind_udp(args.port).await?;
+    let port = config.sender.as_ref().unwrap().port.unwrap();
+    let receiver_port = config.sender.as_ref().unwrap().receiver_port.unwrap();
+
+    let socket = bind_udp(port).await?;
     let socket_clone = Arc::clone(&socket);
 
     let address = if let Some(address) = &args.address {
@@ -23,7 +30,6 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
             .expect("invalid target address")
     } else {
         let (tx, mut rx) = channel::<()>();
-        let receiver_port = args.receiver_port.clone();
         print_color("searching for receiver", Color::Green);
         tokio::spawn(async move {
             broadcast(&socket_clone, receiver_port, &mut rx)

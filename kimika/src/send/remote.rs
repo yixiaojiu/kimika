@@ -1,8 +1,8 @@
 use super::{remote_grpc, utils, SendArgs};
+use crate::config;
 use crate::utils::color::{self, print_color, Color};
 use std::{fs, net::SocketAddr, path::PathBuf};
 
-#[warn(dead_code)]
 pub struct Content {
     pub message: Option<String>,
     pub path: Option<PathBuf>,
@@ -10,7 +10,10 @@ pub struct Content {
     pub size: Option<u64>,
 }
 
-pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn remote_send(
+    args: &SendArgs,
+    config: &config::Config,
+) -> Result<(), Box<dyn std::error::Error>> {
     let message = utils::handle_message(args);
 
     let content = if let Some(path) = &args.path {
@@ -42,14 +45,10 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
         }
     };
 
-    let address = if let Some(address) = &args.address {
-        address
-            .parse::<SocketAddr>()
-            .expect("invalid target address")
-    } else {
-        print_color("please input remote server address", Color::Red);
-        return Ok(());
-    };
+    let address = config.server.as_ref().unwrap().address.clone().unwrap();
+    let address = address
+        .parse::<SocketAddr>()
+        .expect("invalid target address");
 
     let mut client = remote_grpc::create_client(address)
         .await

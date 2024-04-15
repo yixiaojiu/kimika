@@ -1,3 +1,4 @@
+mod config;
 mod receive;
 mod send;
 mod utils;
@@ -20,10 +21,11 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
+    let mut config = config::Config::new();
 
     match cli.command {
-        Commands::Send(args) => send::send(args).await?,
-        Commands::Receive(args) => receive::receive(args).await?,
+        Commands::Send(args) => send::send(args, &mut config).await?,
+        Commands::Receive(args) => receive::receive(args, &mut config).await?,
     }
 
     Ok(())

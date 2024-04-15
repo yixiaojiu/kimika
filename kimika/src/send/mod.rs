@@ -7,6 +7,7 @@ mod utils;
 
 use clap::Args;
 
+use crate::config;
 use crate::utils::color::{print_color, Color};
 
 /// send file
@@ -23,12 +24,12 @@ pub struct SendArgs {
     #[arg(short, long, value_name = "address")]
     pub address: Option<String>,
 
-    #[arg(long, default_value = "3939", value_name = "port")]
-    pub port: u16,
+    #[arg(long, value_name = "port")]
+    pub port: Option<u16>,
 
     /// receiver port when transfer from local network
-    #[arg(long, default_value = "3939", value_name = "receiver_port")]
-    pub receiver_port: u16,
+    #[arg(long, value_name = "receiver_port")]
+    pub receiver_port: Option<u16>,
 
     /// whether to read message from standard input, press ctrl_d to end input
     #[arg(short, long, value_name = "input")]
@@ -39,16 +40,20 @@ pub struct SendArgs {
     pub server: bool,
 }
 
-pub async fn send(args: SendArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send(
+    args: SendArgs,
+    config: &mut config::Config,
+) -> Result<(), Box<dyn std::error::Error>> {
     if args.path.is_none() && args.message.is_none() && !args.input {
         print_color("Please specify a file or a message", Color::Yellow);
         return Ok(());
     }
+    config.update_from_send_args(&args);
 
     if args.server {
-        remote::remote_send(&args).await?;
+        remote::remote_send(&args, &config).await?;
     } else {
-        local::local_send(&args).await?;
+        local::local_send(&args, &config).await?;
     }
 
     Ok(())
