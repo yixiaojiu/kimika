@@ -1,9 +1,10 @@
+use crate::utils;
 use crate::utils::color::{print_color, Color};
 use kimika_grpc::local::{local_client::LocalClient, FileRequest, MessageRequest};
-use std::path::Path;
-use tokio::fs::File;
+use std::time::Duration;
+use std::{cmp::min, path};
 use tokio::io::AsyncReadExt;
-use tokio::sync::mpsc;
+use tokio::{fs, sync::mpsc, time};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{transport::Channel, Request};
 
@@ -12,31 +13,39 @@ pub async fn send_file(
     client: &mut LocalClient<Channel>,
     path: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let path = Path::new(&path);
-    println!("Sending file: {}", path.display());
-    let mut file = File::open(path).await.expect("open file failed");
-    let file_name = path.file_name().expect("").to_str().unwrap();
-    let (tx, rx) = mpsc::channel(20);
+    let pathbuf = path::PathBuf::from(path);
+    let mut file = fs::File::open(&pathbuf).await.expect("open file failed");
+    let filename = pathbuf.file_name().expect("").to_str().unwrap().to_string();
+    let total_size = fs::metadata(&pathbuf).await?.len();
+    let (tx, rx) = mpsc::channel(10);
 
+    let progreebar = utils::create_progress_bar(total_size, &filename);
+    let filename_clone = filename.clone();
     tokio::spawn(async move {
         let mut buf = [0; 1024 * 1024];
+        let mut uploaded_size: u64 = 0;
         loop {
             let n = file.read(&mut buf).await.unwrap();
             if n == 0 {
                 break;
             }
+            let left = uploaded_size;
+            uploaded_size += n as u64;
             let req = FileRequest {
                 data: buf[..n].to_vec(),
             };
             tx.send(req).await.unwrap();
-            println!("Sent {} MB", n / (1024 * 1024));
+            if cfg!(debug_assertions) {
+                time::sleep(Duration::from_millis(100)).await;
+            }
+            progreebar.set_position(min(uploaded_size, total_size));
         }
+        progreebar.finish_with_message(filename_clone);
     });
 
     let mut request = Request::new(ReceiverStream::new(rx));
-    request
-        .metadata_mut()
-        .insert("filename", file_name.parse()?);
+    request.metadata_mut().insert("filename", filename.parse()?);
+    request.metadata_mut().insert("size", total_size.into());
 
     client
         .send_file(request)

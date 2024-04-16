@@ -16,6 +16,7 @@ pub async fn create_client(
     address: SocketAddr,
 ) -> Result<RemoteClient<Channel>, Box<dyn std::error::Error>> {
     let url = format!("http://{}", address).parse::<Uri>()?;
+    println!("connect remote server: {}", url);
     Ok(RemoteClient::connect(url).await?)
 }
 

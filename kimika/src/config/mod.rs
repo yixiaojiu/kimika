@@ -38,15 +38,15 @@ impl Config {
             .map(|p| p.join(".config/kimika/config.toml"))
             .expect("get home dir failed.");
         if user_config_path.exists() {
-            Figment::new()
+            return Figment::new()
                 .merge(Toml::string(include_str!("./default.toml")))
+                .merge(Toml::file(user_config_path))
                 .extract()
-                .unwrap()
+                .unwrap();
         }
 
         Figment::new()
             .merge(Toml::string(include_str!("./default.toml")))
-            .merge(Toml::file(user_config_path))
             .extract()
             .unwrap()
     }

@@ -2,20 +2,6 @@
 
 ## 功能
 
-### 配置文件
-
-```toml
-[profile]
-# 用于标识
-alias = ""
-
-[server]
-# 默认使用 server 桥接
-enable = false
-# 地址
-address = 127.0.0.1:3939
-```
-
 ### 发送消息（未指定目标）
 
 1. `kimika receive`

@@ -2,10 +2,7 @@ use super::local_grpc::{send_file, send_message};
 use super::udp::{bind_udp, broadcast, close_receiver, find_receiver};
 use super::{utils, SendArgs};
 use crate::config;
-use crate::utils::{
-    color::{print_color, Color},
-    stdin_to_string,
-};
+use crate::utils::color::{print_color, Color};
 use kimika_grpc::local::{local_client::LocalClient, EmptyRequest};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -48,11 +45,7 @@ pub async fn local_send(
         .await
         .expect("connect receiver failed");
 
-    if args.message.is_some() {
-        send_message(&mut client, message.clone().unwrap()).await;
-    }
-
-    if args.input && args.message.is_none() {
+    if args.message.is_some() || args.input {
         send_message(&mut client, message.unwrap()).await;
     }
 
