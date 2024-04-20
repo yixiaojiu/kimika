@@ -184,21 +184,12 @@ where
     }
 
     fn erase_printed_items(&mut self) {
-        // self.move_n_lines_up(self.item_count + 1);
-
-        // for line in &self.lines {
-        //     println!("{}", " ".repeat(line.len()));
-        // }
-        // self.move_n_lines_up(self.item_count + 1);
         execute!(
             self.out,
             cursor::MoveToPreviousLine((self.item_count) as u16),
             terminal::Clear(terminal::ClearType::FromCursorDown),
         )
         .unwrap();
-    }
-    fn move_n_lines_up(&self, n: usize) {
-        println!("\x1b[33\x1b[{}A", n);
     }
 
     fn move_up(&mut self) {
@@ -219,7 +210,19 @@ where
         self.print_lines();
     }
 
-    pub async fn start(&mut self, rx: &mut mpsc::Receiver<Vec<I>>) -> &I {
+    pub async fn start(&mut self, rx: &mut mpsc::Receiver<Vec<I>>) -> Option<&I> {
+        loop {
+            if !self.items.is_empty() {
+                break;
+            }
+            let rece_items = rx.recv().await;
+            if let Some(items) = rece_items {
+                if !items.is_empty() {
+                    self.items = items;
+                    break;
+                }
+            }
+        }
         self.build_lines();
         self.print_lines();
 
@@ -238,7 +241,9 @@ where
                 maybe_items = rx_items => {
                     disable_raw_mode().unwrap();
                     if let Some(items) = maybe_items {
-                        self.modify_items(items);
+                        if !items.is_empty() {
+                            self.modify_items(items);
+                        }
                     }
                     enable_raw_mode().unwrap();
                 },
@@ -250,7 +255,7 @@ where
                                 break;
                             }
                             if event == Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE)) {
-                                break;
+                                return None;
                             }
                             if self.event_contains_key(event.clone(), &self.up_keys) {
                                 self.move_up();
@@ -267,7 +272,8 @@ where
             };
         }
 
-        &self.items[self.selected_item]
+        self.erase_printed_items();
+        Some(&self.items[self.selected_item])
     }
     fn event_contains_key(&self, event: Event, keys: &[KeyCode]) -> bool {
         for key in keys.iter() {
@@ -278,9 +284,9 @@ where
         false
     }
     fn modify_items(&mut self, items: Vec<I>) {
+        self.erase_printed_items();
         self.items = items;
         self.selected_item = 0;
-        self.erase_printed_items();
         self.build_lines();
         self.print_lines();
     }

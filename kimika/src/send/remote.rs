@@ -1,6 +1,6 @@
 use super::{remote_grpc, utils, SendArgs};
 use crate::config;
-use crate::utils::color::{self, print_color, Color};
+use crate::utils::color;
 use std::{fs, net::SocketAddr, path::PathBuf};
 
 pub struct Content {

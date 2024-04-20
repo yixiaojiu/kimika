@@ -1,6 +1,6 @@
 pub mod clap;
 pub mod color;
-mod select;
+pub mod select;
 pub mod udp;
 
 use indicatif::{ProgressBar, ProgressStyle};

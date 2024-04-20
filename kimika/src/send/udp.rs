@@ -1,4 +1,3 @@
-use crate::utils::color::{paint_green, paint_yellow};
 use crate::utils::udp::{Action, Register, BUFFER_SIZE};
 use bincode::{deserialize, serialize};
 use std::net::SocketAddrV4;
@@ -37,18 +36,14 @@ pub async fn broadcast(
     Ok(())
 }
 
-pub async fn find_receiver(socket: &UdpSocket) -> Result<SocketAddr, Box<dyn std::error::Error>> {
+pub async fn find_receiver(
+    socket: &UdpSocket,
+) -> Result<(SocketAddr, Register), Box<dyn std::error::Error>> {
     let mut buffer = [0u8; BUFFER_SIZE];
     let (num_bytes, address) = socket.recv_from(&mut buffer).await?;
 
     let register: Register = deserialize(&buffer[..num_bytes])?;
-    println!(
-        "Find a receiver: {} {}",
-        paint_green(&address.to_string()),
-        paint_yellow(&register.alias)
-    );
-
-    Ok(address)
+    Ok((address, register))
 }
 
 pub async fn close_receiver(
