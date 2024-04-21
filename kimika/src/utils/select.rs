@@ -1,15 +1,14 @@
+use crate::utils;
 /// refrence https://github.com/Preyde/cli_select/
 use core::fmt;
 use crossterm::{
-    cursor,
     event::{
         Event, EventStream,
         KeyCode::{self, Down, Up},
         KeyEvent, KeyModifiers,
     },
-    execute,
     style::Stylize,
-    terminal::{self, disable_raw_mode, enable_raw_mode},
+    terminal::{disable_raw_mode, enable_raw_mode},
 };
 use std::fmt::Formatter;
 use std::{fmt::Display, io::Write};
@@ -190,12 +189,7 @@ where
     }
 
     fn erase_printed_items(&mut self) {
-        execute!(
-            self.out,
-            cursor::MoveToPreviousLine((self.item_count) as u16),
-            terminal::Clear(terminal::ClearType::FromCursorDown),
-        )
-        .unwrap();
+        utils::crossterm::clear_up_lines((self.item_count) as u16).unwrap();
     }
 
     fn move_up(&mut self) {
@@ -219,16 +213,21 @@ where
     pub async fn start(
         &mut self,
         rx: &mut mpsc::Receiver<Vec<SelectItem<I>>>,
+        hint_message: Option<&str>,
     ) -> Option<&SelectItem<I>> {
-        loop {
-            if !self.items.is_empty() {
-                break;
+        if self.items.is_empty() {
+            if let Some(hint) = hint_message {
+                println!("{}", hint.yellow());
             }
-            let rece_items = rx.recv().await;
-            if let Some(items) = rece_items {
-                if !items.is_empty() {
-                    self.items = items;
-                    break;
+            loop {
+                if let Some(items) = rx.recv().await {
+                    if !items.is_empty() {
+                        self.items = items;
+                        if hint_message.is_some() {
+                            utils::crossterm::clear_up_lines(1u16).unwrap();
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -306,18 +305,13 @@ pub async fn receiver_select(
 ) -> Result<Option<String>, Box<dyn std::error::Error>> {
     println!("Select a receiver >> (Press q to exit)");
     let mut select = Select::new(Vec::new(), std::io::stdout());
-    let select_item = select.start(rx).await;
+    let select_item = select.start(rx, Some("Searching receiver...")).await;
     if select_item.is_none() {
         return Ok(None);
     }
     let select_item = select_item.unwrap();
 
-    execute!(
-        std::io::stdout(),
-        cursor::MoveToPreviousLine(1u16),
-        terminal::Clear(terminal::ClearType::FromCursorDown),
-    )
-    .unwrap();
+    utils::crossterm::clear_up_lines(1u16).unwrap();
     println!("Select a receiver >> {}", select_item.label.clone().cyan());
     Ok(Some(select_item.id.clone()))
 }
