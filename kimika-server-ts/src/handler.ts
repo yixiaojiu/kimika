@@ -12,7 +12,7 @@ function registerReceiver(
   const ip = call.getPeer().split(':')[0];
   let res = new remote_pb.RegisterReceiverResponse();
   let id = nanoid();
-  receiverMap.set(id, { ...body, ip, id });
+  receiverMap.set(id, { ...body, ip, id, timestamp: Date.now() });
   emitReceiver();
   res.setReceiverId(id);
   callback(null, res);
@@ -27,7 +27,7 @@ function registerContent(
   let res = new remote_pb.RegisterContentResponse();
   let contentId = nanoid();
   const senderId = nanoid();
-  contentMap.set(contentId, { ...content, ip, senderId, contentId });
+  contentMap.set(contentId, { ...content, ip, senderId, contentId, timestamp: Date.now() });
   res.setContentId(contentId);
   res.setSenderId(senderId);
   callback(null, res);

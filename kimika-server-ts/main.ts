@@ -2,6 +2,19 @@ import remote_grpc from './src/proto/remote_grpc_pb';
 // cjs import
 import * as grpc from '@grpc/grpc-js';
 import handler from './src/handler';
+import { CronJob } from 'cron';
+import { checkState } from './src/state';
+
+new CronJob(
+  '0 0 * * * *',
+  function () {
+    checkState('receive');
+    checkState('content');
+  },
+  null,
+  true,
+  'America/Los_Angeles'
+);
 
 function main() {
   const server = new grpc.Server();

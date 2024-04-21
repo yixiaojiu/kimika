@@ -8,6 +8,8 @@
 
 - automatically search receivers
 - support pipeline
+- support transfer through remote server
+- support transfer through local network
 - based on grpc
 
 ## Installation
