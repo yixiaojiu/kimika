@@ -1,5 +1,4 @@
 pub mod clap;
-pub mod color;
 pub mod select;
 pub mod udp;
 

@@ -1,5 +1,4 @@
 use crate::utils;
-use crate::utils::color::{print_color, Color};
 use kimika_grpc::local::{local_client::LocalClient, FileRequest, MessageRequest};
 use std::time::Duration;
 use std::{cmp::min, path};
@@ -59,5 +58,4 @@ pub async fn send_message(client: &mut LocalClient<Channel>, message: String) {
         .send_message(MessageRequest { message })
         .await
         .expect("Message sending failed");
-    print_color("Message sent successfully", Color::Green)
 }

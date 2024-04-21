@@ -98,12 +98,18 @@ impl Display for Line {
     }
 }
 
+#[derive(Clone)]
+pub struct SelectItem<I: ToString + Display> {
+    pub id: String,
+    pub label: I,
+}
+
 pub struct Select<I, W>
 where
     I: ToString + Display,
     W: Write, // W: std::io::Write, // F: Fn(SelectDialogKey, &I),
 {
-    items: Vec<I>,
+    items: Vec<SelectItem<I>>,
     lines: Vec<Line>,
     selected_item: usize,
     pointer: char,
@@ -128,7 +134,7 @@ where
     /// Create a new Select Dialog with lines defined in the items parameter.
     ///
     /// Any Struct that implements std::io::write can be used as output. Use std::io::stdout() as second parameter to print to console
-    pub fn new(items: Vec<I>, out: W) -> Select<I, W> {
+    pub fn new(items: Vec<SelectItem<I>>, out: W) -> Select<I, W> {
         Select {
             items,
             pointer: '>',
@@ -151,7 +157,7 @@ where
         let mut lines: Vec<Line> = vec![];
         let mut item_count: usize = 0;
         for item in &self.items {
-            let mut line = Line::new(item.to_string(), self.pointer);
+            let mut line = Line::new(item.label.to_string(), self.pointer);
 
             if let Some(pointer) = self.not_selected_pointer {
                 line.not_selected_pointer(pointer);
@@ -210,7 +216,10 @@ where
         self.print_lines();
     }
 
-    pub async fn start(&mut self, rx: &mut mpsc::Receiver<Vec<I>>) -> Option<&I> {
+    pub async fn start(
+        &mut self,
+        rx: &mut mpsc::Receiver<Vec<SelectItem<I>>>,
+    ) -> Option<&SelectItem<I>> {
         loop {
             if !self.items.is_empty() {
                 break;
@@ -283,11 +292,32 @@ where
         }
         false
     }
-    fn modify_items(&mut self, items: Vec<I>) {
+    fn modify_items(&mut self, items: Vec<SelectItem<I>>) {
         self.erase_printed_items();
         self.items = items;
         self.selected_item = 0;
         self.build_lines();
         self.print_lines();
     }
+}
+
+pub async fn receiver_select(
+    rx: &mut mpsc::Receiver<Vec<SelectItem<String>>>,
+) -> Result<Option<String>, Box<dyn std::error::Error>> {
+    println!("Select a receiver >> (Press q to exit)");
+    let mut select = Select::new(Vec::new(), std::io::stdout());
+    let select_item = select.start(rx).await;
+    if select_item.is_none() {
+        return Ok(None);
+    }
+    let select_item = select_item.unwrap();
+
+    execute!(
+        std::io::stdout(),
+        cursor::MoveToPreviousLine(1u16),
+        terminal::Clear(terminal::ClearType::FromCursorDown),
+    )
+    .unwrap();
+    println!("Select a receiver >> {}", select_item.label.clone().cyan());
+    Ok(Some(select_item.id.clone()))
 }

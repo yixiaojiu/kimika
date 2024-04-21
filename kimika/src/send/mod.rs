@@ -8,7 +8,7 @@ mod utils;
 use clap::Args;
 
 use crate::config;
-use crate::utils::color::{print_color, Color};
+use crossterm::style::Stylize;
 
 /// send file
 #[derive(Args, Debug)]
@@ -45,7 +45,7 @@ pub async fn send(
     config: &mut config::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if args.path.is_none() && args.message.is_none() && !args.input {
-        print_color("Please specify a file or a message", Color::Yellow);
+        println!("{}", "Please specify a file or a message".yellow());
         return Ok(());
     }
     config.update_from_send_args(&args);
