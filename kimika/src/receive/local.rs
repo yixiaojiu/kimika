@@ -10,12 +10,10 @@ pub async fn local_receive(
     _args: &ReceiveArgs,
     config: &config::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let receiver = config.receiver.as_ref().unwrap();
-    let port = receiver.port.unwrap();
-    let alias = receiver.alias.clone().unwrap();
-    let save_folder = std::path::PathBuf::from(receiver.save_folder.clone().unwrap());
+    let alias = config.alias.clone();
+    let save_folder = std::path::PathBuf::from(config.receiver.save_folder.clone());
 
-    let address = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), port);
+    let address = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), config.receiver.port);
 
     tokio::spawn(async move {
         listen_boardcast(&address, &alias).await.unwrap();

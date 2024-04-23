@@ -3,7 +3,6 @@ mod local_grpc;
 mod remote;
 mod remote_grpc;
 mod udp;
-mod utils;
 
 use clap::Args;
 
@@ -31,9 +30,8 @@ pub struct SendArgs {
     #[arg(long, value_name = "receiver_port")]
     pub receiver_port: Option<u16>,
 
-    /// whether to read message from standard input, press ctrl_d to end input
-    // #[arg(short, long, value_name = "input")]
-    // pub input: bool,
+    #[arg(long, value_name = "alias")]
+    pub alias: Option<String>,
 
     /// whether to use remote server
     #[arg(short, long, value_name = "server", default_value = "false")]

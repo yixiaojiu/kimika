@@ -1,24 +1,21 @@
 use super::{remote_grpc, ReceiveArgs};
-use crate::config;
+use crate::{config, utils::handle};
+use crossterm::style::Stylize;
 use kimika_grpc::remote;
-use std::net::SocketAddr;
 
 pub async fn remote_receive(
-    _args: &ReceiveArgs,
+    args: &ReceiveArgs,
     config: &config::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let address = config
-        .server
-        .as_ref()
-        .unwrap()
-        .address
-        .clone()
-        .unwrap()
-        .parse::<SocketAddr>()
-        .expect("invalid target address");
-    let receiver = config.receiver.as_ref().unwrap();
-    let alias = receiver.alias.clone().unwrap();
-    let save_folder = std::path::PathBuf::from(receiver.save_folder.clone().unwrap());
+    let address = if let Some(addr) = handle::handle_address(args.address.clone(), config) {
+        addr
+    } else {
+        println!("{}", "No server address configured".red());
+        return Ok(());
+    };
+
+    let alias = config.alias.clone();
+    let save_folder = std::path::PathBuf::from(config.receiver.save_folder.clone());
 
     let mut client = remote_grpc::create_client(address)
         .await

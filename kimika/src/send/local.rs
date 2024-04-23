@@ -1,7 +1,7 @@
 use super::local_grpc::{send_file, send_message};
 use super::udp::{bind_udp, broadcast, close_receiver, find_receiver};
-use super::{utils, SendArgs};
-use crate::{config, utils::select};
+use super::SendArgs;
+use crate::{config, utils::handle, utils::select};
 use kimika_grpc::local::{local_client::LocalClient, EmptyRequest};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -12,12 +12,11 @@ pub async fn local_send(
     args: &SendArgs,
     config: &config::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let message = utils::handle_message(args);
+    let message = handle::handle_message(args);
 
-    let port = config.sender.as_ref().unwrap().port.unwrap();
-    let receiver_port = config.sender.as_ref().unwrap().receiver_port.unwrap();
+    let receiver_port = config.sender.receiver_port;
 
-    let socket = bind_udp(port).await?;
+    let socket = bind_udp(config.sender.port).await?;
 
     let address = if let Some(address) = &args.address {
         address

@@ -1,6 +1,7 @@
-use super::{remote_grpc, utils, SendArgs};
-use crate::{config, utils::select};
-use std::{fs, net::SocketAddr, path::PathBuf};
+use super::{remote_grpc, SendArgs};
+use crate::{config, utils::handle, utils::select};
+use crossterm::style::Stylize;
+use std::{fs, path::PathBuf};
 use tokio::sync::mpsc;
 
 pub struct Content {
@@ -14,7 +15,7 @@ pub async fn remote_send(
     args: &SendArgs,
     config: &config::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let message = utils::handle_message(args);
+    let message = handle::handle_message(args);
 
     let content = if let Some(path) = &args.path {
         let pathbuf = PathBuf::from(path);
@@ -45,14 +46,17 @@ pub async fn remote_send(
         }
     };
 
-    let address = config.server.as_ref().unwrap().address.clone().unwrap();
-    let address = address
-        .parse::<SocketAddr>()
-        .expect("invalid target address");
+    let address = if let Some(addr) = handle::handle_address(args.address.clone(), config) {
+        addr
+    } else {
+        println!("{}", "No server address configured".red());
+        return Ok(());
+    };
 
     let mut client = remote_grpc::create_client(address)
         .await
         .expect("connect remote server failed");
+    println!("{} {}", "Connected to remote server: ".green(), address);
 
     let register_res = remote_grpc::register_content(&mut client, &content)
         .await

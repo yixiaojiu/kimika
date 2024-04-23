@@ -16,7 +16,6 @@ pub async fn create_client(
     address: SocketAddr,
 ) -> Result<RemoteClient<Channel>, Box<dyn std::error::Error>> {
     let url = format!("http://{}", address).parse::<Uri>()?;
-    println!("connect remote server: {}", url);
     Ok(RemoteClient::connect(url).await?)
 }
 
@@ -77,7 +76,7 @@ pub async fn send(
         let mut file = fs::File::open(content.path.as_ref().unwrap()).await?;
         let filename = content.name.as_ref().unwrap().clone();
         let total_size = content.size.unwrap();
-        let progreebar = utils::create_progress_bar(total_size, &filename);
+        let progreebar = utils::handle::create_progress_bar(total_size, &filename);
         tokio::spawn(async move {
             let mut buf = [0; 1024 * 1024];
             let mut uploaded_size: u64 = 0;

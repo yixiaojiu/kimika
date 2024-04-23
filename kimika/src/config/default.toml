@@ -1,13 +1,10 @@
-[server]
-alias = "server"
-address = "127.0.0.1:3941"
+alias = "kimika"
+auto_select_first_server = true
 
 [receiver]
-alias = "receiver"
 save_folder = "./"
 port = 3940
 
 [sender]
-alias = "sender"
 port = 3939
 receiver_port = 3940

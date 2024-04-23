@@ -17,8 +17,7 @@ pub struct ReceiveArgs {
     #[arg(long, value_name = "save_folder")]
     pub save_folder: Option<String>,
 
-    /// receiver alias
-    #[arg(long, default_value = "receiver", value_name = "alias")]
+    #[arg(long, value_name = "alias")]
     pub alias: Option<String>,
 
     /// whether to use remote server

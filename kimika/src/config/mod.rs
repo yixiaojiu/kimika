@@ -7,29 +7,28 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    pub server: Option<ServerConfig>,
-    pub receiver: Option<ReceiverConfig>,
-    pub sender: Option<SenderConfig>,
+    pub alias: String,
+    pub auto_select_first_server: bool,
+    pub receiver: ReceiverConfig,
+    pub sender: SenderConfig,
+    pub server: Vec<ServerConfig>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ServerConfig {
-    pub alias: Option<String>,
-    pub address: Option<String>,
+    pub address: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ReceiverConfig {
-    pub alias: Option<String>,
-    pub save_folder: Option<String>,
-    pub port: Option<u16>,
+    pub save_folder: String,
+    pub port: u16,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SenderConfig {
-    pub alias: Option<String>,
-    pub port: Option<u16>,
-    pub receiver_port: Option<u16>,
+    pub port: u16,
+    pub receiver_port: u16,
 }
 
 impl Config {
@@ -52,26 +51,26 @@ impl Config {
     }
 
     pub fn update_from_send_args(&mut self, args: &send::SendArgs) {
-        if let Some(address) = &args.address {
-            self.server.as_mut().unwrap().address = Some(address.clone())
+        if let Some(alias) = args.alias.clone() {
+            self.alias = alias;
         }
         if let Some(port) = args.port {
-            self.sender.as_mut().unwrap().port = Some(port)
+            self.sender.port = port
         }
         if let Some(receiver_port) = args.receiver_port {
-            self.sender.as_mut().unwrap().receiver_port = Some(receiver_port)
+            self.sender.receiver_port = receiver_port
         }
     }
 
     pub fn update_from_receive_args(&mut self, args: &receive::ReceiveArgs) {
         if let Some(port) = args.port {
-            self.receiver.as_mut().unwrap().port = Some(port)
+            self.receiver.port = port
         }
-        if let Some(alias) = &args.alias {
-            self.receiver.as_mut().unwrap().alias = Some(alias.clone())
+        if let Some(alias) = args.alias.clone() {
+            self.alias = alias
         }
-        if let Some(save_folder) = &args.save_folder {
-            self.receiver.as_mut().unwrap().save_folder = Some(save_folder.clone())
+        if let Some(save_folder) = args.save_folder.clone() {
+            self.receiver.save_folder = save_folder
         }
     }
 }

@@ -72,7 +72,7 @@ pub async fn receive(
             rename_num += 1;
         }
         let total_size = content.size.unwrap();
-        let progreebar = utils::create_progress_bar(total_size, &filename);
+        let progreebar = utils::handle::create_progress_bar(total_size, &filename);
         let mut file = fs::File::create(pathbuf).await.expect("create file failed");
         let mut downloaded_size = 0;
         while let Some(res) = receive_res.message().await? {

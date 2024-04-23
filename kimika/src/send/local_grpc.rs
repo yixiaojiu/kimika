@@ -18,7 +18,7 @@ pub async fn send_file(
     let total_size = fs::metadata(&pathbuf).await?.len();
     let (tx, rx) = mpsc::channel(10);
 
-    let progreebar = utils::create_progress_bar(total_size, &filename);
+    let progreebar = utils::handle::create_progress_bar(total_size, &filename);
     let filename_clone = filename.clone();
     tokio::spawn(async move {
         let mut buf = [0; 1024 * 1024];

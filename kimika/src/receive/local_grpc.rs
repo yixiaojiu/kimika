@@ -73,7 +73,7 @@ impl Local for LocalService {
         let mut file = File::create(path).await?;
 
         let mut stream = request.into_inner();
-        let progreebar = utils::create_progress_bar(total_size, &filename);
+        let progreebar = utils::handle::create_progress_bar(total_size, &filename);
         let mut downloaded_size: u64 = 0;
         while let Some(request) = stream.next().await {
             let request = request?;
