@@ -1,20 +1,9 @@
 pub mod clap;
-mod crossterm;
+pub mod crossterm;
 pub mod select;
 pub mod udp;
 
 use indicatif::{ProgressBar, ProgressStyle};
-use std::io::Read;
-
-pub fn stdin_to_string() -> String {
-    let mut string = String::new();
-
-    std::io::stdin()
-        .read_to_string(&mut string)
-        .expect("read standard input failed");
-
-    string
-}
 
 pub fn create_progress_bar(total_size: u64, filename: &String) -> ProgressBar {
     let pb = ProgressBar::new(total_size);

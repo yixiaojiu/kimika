@@ -8,7 +8,7 @@ mod utils;
 use clap::Args;
 
 use crate::config;
-use crossterm::style::Stylize;
+use crossterm::{style::Stylize, tty::IsTty};
 
 /// send file
 #[derive(Args, Debug)]
@@ -32,8 +32,8 @@ pub struct SendArgs {
     pub receiver_port: Option<u16>,
 
     /// whether to read message from standard input, press ctrl_d to end input
-    #[arg(short, long, value_name = "input")]
-    pub input: bool,
+    // #[arg(short, long, value_name = "input")]
+    // pub input: bool,
 
     /// whether to use remote server
     #[arg(short, long, value_name = "server", default_value = "false")]
@@ -44,7 +44,7 @@ pub async fn send(
     args: SendArgs,
     config: &mut config::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if args.path.is_none() && args.message.is_none() && !args.input {
+    if args.path.is_none() && args.message.is_none() && std::io::stdin().is_tty() {
         println!("{}", "Please specify a file or a message".yellow());
         return Ok(());
     }

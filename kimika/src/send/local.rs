@@ -65,7 +65,7 @@ pub async fn local_send(
         .await
         .expect("connect receiver failed");
 
-    if args.message.is_some() || args.input {
+    if message.is_some() {
         send_message(&mut client, message.unwrap()).await;
     }
 

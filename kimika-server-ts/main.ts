@@ -4,6 +4,7 @@ import * as grpc from '@grpc/grpc-js';
 import handler from './src/handler';
 import { CronJob } from 'cron';
 import { checkState } from './src/state';
+import { loggingInterceptor } from './src/middleware';
 
 new CronJob(
   '0 0 * * * *',
@@ -17,7 +18,9 @@ new CronJob(
 );
 
 function main() {
-  const server = new grpc.Server();
+  const server = new grpc.Server({
+    interceptors: [loggingInterceptor],
+  });
 
   server.addService(remote_grpc.RemoteService, handler);
 
@@ -25,7 +28,6 @@ function main() {
     if (err != null) {
       return console.error(err);
     }
-    console.log(`gRPC listening on ${port}`);
   });
 }
 

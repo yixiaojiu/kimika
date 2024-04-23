@@ -1,4 +1,5 @@
 import remote_pb from './proto/remote_pb';
+import { info } from './logger';
 
 interface Receiver {
   // register time
@@ -30,9 +31,13 @@ const EXPIRES = 60 * 60 * 1000;
 export function checkState(target: 'receive' | 'content') {
   const map = target === 'receive' ? receiverMap : contentMap;
 
+  const removeKeys: string[] = [];
   for (const [key, value] of map) {
     if (Date.now() - value.timestamp > EXPIRES) {
+      removeKeys.push(key);
       map.delete(key);
     }
   }
+
+  removeKeys.length && info(`[checkState] ${target} remove keys: ${removeKeys.join(',')}`);
 }
