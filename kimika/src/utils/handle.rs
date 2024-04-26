@@ -15,6 +15,7 @@ pub fn create_progress_bar(total_size: u64, filename: &String) -> ProgressBar {
 
 pub fn handle_address(address: Option<String>, config: &config::Config) -> Option<SocketAddr> {
     if let Some(address_str) = address {
+        // search through alias
         Some(address_str.parse::<SocketAddr>().expect("invalid address"))
     } else {
         if config.server.is_empty() {

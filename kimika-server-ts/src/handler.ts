@@ -57,7 +57,17 @@ async function getReceivers(call: grpc.ServerWritableStream<remote_pb.EmptyReque
 
 async function getContent(call: grpc.ServerWritableStream<remote_pb.GetContentRequest, remote_pb.GetContentResponse>) {
   const receiver_id = call.request.getReceiverId();
+  let shouldBreak = false;
+  call.once('cancelled', () => {
+    shouldBreak = true;
+    receiverMap.delete(receiver_id);
+    emitReceiver();
+  });
+
   while (true) {
+    if (shouldBreak) {
+      break;
+    }
     const senderId = await contentChannel.on<string>(receiver_id);
     if (!call.writable) {
       break;

@@ -121,6 +121,7 @@ where
     underline_selected_item: bool,
     longest_item_len: usize,
     item_count: usize,
+    hint_message: Option<&'static str>,
     out: W,
     // out: Option<W>, // logger: Logger<W>,
 }
@@ -133,7 +134,11 @@ where
     /// Create a new Select Dialog with lines defined in the items parameter.
     ///
     /// Any Struct that implements std::io::write can be used as output. Use std::io::stdout() as second parameter to print to console
-    pub fn new(items: Vec<SelectItem<I>>, out: W) -> Select<I, W> {
+    pub fn new(
+        items: Vec<SelectItem<I>>,
+        out: W,
+        hint_message: Option<&'static str>,
+    ) -> Select<I, W> {
         Select {
             items,
             pointer: '>',
@@ -148,6 +153,7 @@ where
             lines: vec![],
             longest_item_len: 0,
             item_count: 0,
+            hint_message,
             out,
         }
     }
@@ -210,34 +216,13 @@ where
         self.print_lines();
     }
 
-    pub async fn start(
+    pub async fn start_rx(
         &mut self,
         rx: &mut mpsc::Receiver<Vec<SelectItem<I>>>,
-        hint_message: Option<&str>,
     ) -> Option<&SelectItem<I>> {
-        if self.items.is_empty() {
-            if let Some(hint) = hint_message {
-                println!("{}", hint.yellow());
-            }
-            loop {
-                if let Some(items) = rx.recv().await {
-                    if !items.is_empty() {
-                        self.items = items;
-                        if hint_message.is_some() {
-                            utils::crossterm::clear_up_lines(1u16).unwrap();
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        self.build_lines();
-        self.print_lines();
-
         self.up_keys.push(self.default_up);
         self.down_keys.push(self.default_down);
         enable_raw_mode().unwrap();
-
         let mut reader = EventStream::new();
 
         loop {
@@ -249,9 +234,7 @@ where
                 maybe_items = rx_items => {
                     disable_raw_mode().unwrap();
                     if let Some(items) = maybe_items {
-                        if !items.is_empty() {
-                            self.modify_items(items);
-                        }
+                        self.modify_items(items);
                     }
                     enable_raw_mode().unwrap();
                 },
@@ -259,7 +242,7 @@ where
                     match maybe_event {
                         Some(Ok(event)) => {
                             disable_raw_mode().unwrap();
-                            if event == Event::Key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE)) {
+                            if event == Event::Key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE)) && !self.items.is_empty() {
                                 break;
                             }
                             if event == Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE)) {
@@ -292,11 +275,22 @@ where
         false
     }
     fn modify_items(&mut self, items: Vec<SelectItem<I>>) {
-        self.erase_printed_items();
-        self.items = items;
-        self.selected_item = 0;
-        self.build_lines();
-        self.print_lines();
+        if items.is_empty() {
+            self.erase_printed_items();
+            if let Some(hint) = self.hint_message {
+                println!("{}", hint.yellow());
+            }
+            self.items = items;
+            self.selected_item = 0;
+        } else {
+            if self.items.is_empty() && self.hint_message.is_some() {
+                utils::crossterm::clear_up_lines(1u16).unwrap();
+            }
+            self.items = items;
+            self.selected_item = 0;
+            self.build_lines();
+            self.print_lines();
+        }
     }
 }
 
@@ -304,8 +298,8 @@ pub async fn receiver_select(
     rx: &mut mpsc::Receiver<Vec<SelectItem<String>>>,
 ) -> Result<Option<String>, Box<dyn std::error::Error>> {
     println!("Select a receiver >> (Press q to exit)");
-    let mut select = Select::new(Vec::new(), std::io::stdout());
-    let select_item = select.start(rx, Some("Searching receiver...")).await;
+    let mut select = Select::new(Vec::new(), std::io::stdout(), Some("Searching receiver..."));
+    let select_item = select.start_rx(rx).await;
     if select_item.is_none() {
         return Ok(None);
     }

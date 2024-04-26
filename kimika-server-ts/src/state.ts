@@ -23,6 +23,7 @@ interface Content {
 
 export const receiverMap = new Map<string, Receiver>();
 
+// contentId
 export const contentMap = new Map<string, Content>();
 
 // 1 hour

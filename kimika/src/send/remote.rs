@@ -78,9 +78,6 @@ pub async fn remote_send(
                 label: format!("{} {}", receiver.alias, receiver.ip),
                 id: receiver.receiver_id.clone(),
             });
-            if receiver_iter.len() == 0 {
-                continue;
-            }
             tx.send(receiver_iter.collect()).await.unwrap();
         }
     });
@@ -99,8 +96,8 @@ pub async fn remote_send(
             .await
             .expect("request choose receiver failed");
 
-    while let Some(res) = choose_res.message().await? {
-        println!("start sending, receiver_id: {}", res.receiver_id);
+    while let Some(_) = choose_res.message().await? {
+        println!("Start sending");
         break;
     }
 
