@@ -14,14 +14,12 @@
 
 ## Installation
 
+Follow [tonic getting started](https://github.com/hyperium/tonic?tab=readme-ov-file#getting-started) to install `protobuf complier`
+
 ```sh
 cargo install --git https://github.com/yixiaojiu/kimika kimika
 ```
 
-## Usage
+## Document
 
 [docs/usage](/docs/usage.md)
-
-## How to develop
-
-Follow [tonic getting started](https://github.com/hyperium/tonic?tab=readme-ov-file#getting-started) to install `protobuf complier`

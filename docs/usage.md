@@ -33,34 +33,58 @@ Options:
   -s, --server                         whether to use remote server
 ```
 
-## Transfer in local network
+## Sender
 
-### Send text
-
-On the one device, run the following command:
+Send a text through local network
 
 ```sh
 kimika send -m "hello world"
 ```
 
-On the other device
-
-```sh
-kimika receive
-```
-
-### Send file
-
-On the one device, run the following command:
+Send a file through local network
 
 ```sh
 kimika send -p demo.txt
 ```
 
-On the other device
+Use remote server
+
+First of all, you should have a remote server. Follow [docs/server](/docs/server.md) to deploy a server.
+
+Assume you have a server with the address `127.0.0.1:3941`
+
+```sh
+kimika send -m "hello world" -s -a 127.0.0.1:3941
+```
+
+If you set the server in the configuration file, you do not need to specify the address.
+
+For example: `~/.config/kimika/config.toml`
+
+```toml
+[[server]]
+alias = "local"
+address = "127.0.0.1:3941"
+```
+
+```sh
+kimika send -m "hello world" -s
+```
+
+For configuration file details, please refer to [docs/configuration](/docs/configuration.md)
+
+## Receiver
+
+Receive in local network
 
 ```sh
 kimika receive
 ```
 
-## Transfer through remote server
+Receive through remote server
+
+```sh
+kimika receive -s -a 127.0.0.1:3941
+```
+
+You can also don't specify the address, if you set the server in the configuration file.
