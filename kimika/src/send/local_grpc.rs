@@ -20,7 +20,7 @@ pub async fn send_file(
     let progreebar = utils::handle::create_progress_bar(total_size, &filename);
     let filename_clone = filename.clone();
     tokio::spawn(async move {
-        let mut buf = [0; 1024 * 1024];
+        let mut buf = vec![0u8; 2 * 1024 * 1024];
         let mut uploaded_size: u64 = 0;
         loop {
             let n = file.read(&mut buf).await.unwrap();

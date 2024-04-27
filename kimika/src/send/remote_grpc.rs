@@ -68,7 +68,7 @@ pub async fn send(
     content_id: String,
     content: &Content,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let (tx, rx) = mpsc::channel(2);
+    let (tx, rx) = mpsc::channel(5);
 
     if content.path.is_some() {
         let mut file = fs::File::open(content.path.as_ref().unwrap()).await?;
@@ -76,7 +76,7 @@ pub async fn send(
         let total_size = content.size.unwrap();
         let progreebar = utils::handle::create_progress_bar(total_size, &filename);
         tokio::spawn(async move {
-            let mut buf = [0; 1024 * 1024];
+            let mut buf = vec![0u8; 2 * 1024 * 1024];
             let mut uploaded_size: u64 = 0;
             loop {
                 let n = file.read(&mut buf).await.unwrap();
