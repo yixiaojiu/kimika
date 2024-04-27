@@ -1,9 +1,8 @@
 use crate::utils;
 use kimika_grpc::local::{local_client::LocalClient, FileRequest, MessageRequest};
-use std::time::Duration;
 use std::{cmp::min, path};
 use tokio::io::AsyncReadExt;
-use tokio::{fs, sync::mpsc, time};
+use tokio::{fs, sync::mpsc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{transport::Channel, Request};
 
@@ -16,7 +15,7 @@ pub async fn send_file(
     let mut file = fs::File::open(&pathbuf).await.expect("open file failed");
     let filename = pathbuf.file_name().expect("").to_str().unwrap().to_string();
     let total_size = fs::metadata(&pathbuf).await?.len();
-    let (tx, rx) = mpsc::channel(10);
+    let (tx, rx) = mpsc::channel(5);
 
     let progreebar = utils::handle::create_progress_bar(total_size, &filename);
     let filename_clone = filename.clone();
@@ -34,9 +33,6 @@ pub async fn send_file(
                 data: buf[..n].to_vec(),
             };
             tx.send(req).await.unwrap();
-            if cfg!(debug_assertions) {
-                time::sleep(Duration::from_millis(100)).await;
-            }
             progreebar.set_position(min(uploaded_size, total_size));
         }
         progreebar.finish_with_message(filename_clone);

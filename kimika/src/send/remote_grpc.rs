@@ -1,10 +1,8 @@
 use super::remote::Content;
 use crate::utils;
 use kimika_grpc::remote::{self, remote_client::RemoteClient};
-use std::time::Duration;
 use std::{cmp::min, net::SocketAddr};
-// use
-use tokio::{fs, io::AsyncReadExt, sync::mpsc, time};
+use tokio::{fs, io::AsyncReadExt, sync::mpsc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{
     self,
@@ -70,7 +68,7 @@ pub async fn send(
     content_id: String,
     content: &Content,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let (tx, rx) = mpsc::channel(10);
+    let (tx, rx) = mpsc::channel(2);
 
     if content.path.is_some() {
         let mut file = fs::File::open(content.path.as_ref().unwrap()).await?;
@@ -92,9 +90,6 @@ pub async fn send(
                     range: vec![left, uploaded_size],
                 };
                 tx.send(req).await.unwrap();
-                if cfg!(debug_assertions) {
-                    time::sleep(Duration::from_millis(100)).await;
-                }
                 progreebar.set_position(min(uploaded_size, total_size));
             }
             progreebar.finish_with_message(filename);

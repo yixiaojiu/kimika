@@ -20,6 +20,7 @@ pub async fn remote_receive(
     let mut client = remote_grpc::create_client(address)
         .await
         .expect("connect remote server failed");
+    eprintln!("{} {}", "Connected to remote server: ".green(), address);
 
     let register_res = remote_grpc::register_receiver(&mut client, &alias)
         .await
