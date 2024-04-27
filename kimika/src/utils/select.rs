@@ -195,7 +195,9 @@ where
     }
 
     fn erase_printed_items(&mut self) {
-        utils::crossterm::clear_up_lines((self.item_count) as u16).unwrap();
+        if self.item_count != 0 {
+            utils::crossterm::clear_up_lines((self.item_count) as u16).unwrap();
+        }
     }
 
     fn move_up(&mut self) {
@@ -222,8 +224,14 @@ where
     ) -> Option<&SelectItem<I>> {
         self.up_keys.push(self.default_up);
         self.down_keys.push(self.default_down);
-        enable_raw_mode().unwrap();
         let mut reader = EventStream::new();
+
+        if self.items.is_empty() && self.hint_message.is_some() {
+            println!("{}", self.hint_message.unwrap().yellow());
+        } else {
+            self.build_lines();
+            self.print_lines();
+        }
 
         loop {
             enable_raw_mode().unwrap();
@@ -276,7 +284,11 @@ where
     }
     fn modify_items(&mut self, items: Vec<SelectItem<I>>) {
         if items.is_empty() {
-            self.erase_printed_items();
+            if self.items.is_empty() {
+                utils::crossterm::clear_up_lines(1u16).unwrap();
+            } else {
+                self.erase_printed_items();
+            }
             if let Some(hint) = self.hint_message {
                 println!("{}", hint.yellow());
             }

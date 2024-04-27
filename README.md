@@ -6,49 +6,21 @@
 
 ## Features
 
-- automatically search receivers
-- support pipeline
-- support transfer through remote server
-- support transfer through local network
-- based on grpc
+- Automatically search receivers
+- Support pipeline
+- Support transfer through remote server
+- Support transfer through local network
+- Based on grpc
 
 ## Installation
 
 ```sh
-git clone https://github.com/yixiaojiu/kimika
-
-cargo install ./kimika/kimika
+cargo install --git https://github.com/yixiaojiu/kimika kimika
 ```
 
 ## Usage
 
-### Send text
-
-On the one device, run the following command:
-
-```sh
-kimika send -m "hello world"
-```
-
-On the other device
-
-```sh
-kimika receive
-```
-
-### Send file
-
-On the one device, run the following command:
-
-```sh
-kimika send -p demo.txt
-```
-
-On the other device
-
-```sh
-kimika receive
-```
+[docs/usage](/docs/usage.md)
 
 ## How to develop
 

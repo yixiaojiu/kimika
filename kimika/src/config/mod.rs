@@ -69,7 +69,7 @@ impl Config {
         if let Some(alias) = args.alias.clone() {
             self.alias = alias
         }
-        if let Some(save_folder) = args.save_folder.clone() {
+        if let Some(save_folder) = args.folder.clone() {
             self.receiver.save_folder = save_folder
         }
     }

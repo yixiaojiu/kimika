@@ -11,12 +11,15 @@ use clap::Args;
 #[derive(Args, Debug)]
 #[command(version, about, long_about = None)]
 pub struct ReceiveArgs {
+    /// listen port
     #[arg(long, value_name = "port")]
     pub port: Option<u16>,
 
-    #[arg(long, value_name = "save_folder")]
-    pub save_folder: Option<String>,
+    /// save folder
+    #[arg(short, long, value_name = "folder")]
+    pub folder: Option<String>,
 
+    /// alias used for identification
     #[arg(long, value_name = "alias")]
     pub alias: Option<String>,
 

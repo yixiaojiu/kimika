@@ -1,6 +1,7 @@
 import * as grpc from '@grpc/grpc-js';
 import remote_pb from './proto/remote_pb';
 import { nanoid } from 'nanoid';
+import { info } from './logger';
 import { receiverMap, contentMap } from './state';
 import { onReceiver, emitReceiver, contentChannel, onSender, emitSender, onStream, emitStream } from './events';
 
@@ -61,6 +62,7 @@ async function getContent(call: grpc.ServerWritableStream<remote_pb.GetContentRe
   call.once('cancelled', () => {
     shouldBreak = true;
     receiverMap.delete(receiver_id);
+    info(`Receive (${receiver_id}) disconnects`);
     emitReceiver();
   });
 
