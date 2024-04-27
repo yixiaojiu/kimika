@@ -4,13 +4,13 @@
 
 ## Kimika - CLI tool for sending text or files
 
-## Features
+Kimika is a CLI tool for sending text or files written in Rust, based on grpc. It aims to get rid of dependence on wechat or QQ.
 
-- Automatically search receivers
-- Support pipeline
-- Support transfer through remote server
-- Support transfer through local network
-- Based on grpc
+- 🌟 Automatically search receivers
+- 💫 Support pipeline
+- 🖼️ Support transfer through remote server
+- 💡 Support transfer through local network
+- 💪 Based on grpc
 
 ## Installation
 
