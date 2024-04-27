@@ -75,7 +75,7 @@ pub async fn remote_send(
     tokio::spawn(async move {
         while let Some(res) = receiver_res.message().await.unwrap() {
             let receiver_iter = res.receivers.iter().map(|receiver| select::SelectItem {
-                label: format!("{} {}", receiver.alias, receiver.ip),
+                label: format!("{:10} {}", receiver.alias, receiver.ip),
                 id: receiver.receiver_id.clone(),
             });
             tx.send(receiver_iter.collect()).await.unwrap();

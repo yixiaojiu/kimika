@@ -29,7 +29,7 @@ pub struct SendArgs {
     #[arg(long, value_name = "port")]
     pub port: Option<u16>,
 
-    /// receiver port when transfer from local network
+    /// receiver listening port when transfer from local network
     #[arg(long, value_name = "receiver_port")]
     pub receiver_port: Option<u16>,
 

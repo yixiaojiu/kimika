@@ -14,7 +14,7 @@
 
 ## Installation
 
-Follow [tonic getting started](https://github.com/hyperium/tonic?tab=readme-ov-file#getting-started) to install `protobuf complier`
+Follow [tonic getting started](https://github.com/hyperium/tonic?tab=readme-ov-file#dependencies) to install `protobuf complier`
 
 ```sh
 cargo install --git https://github.com/yixiaojiu/kimika kimika
@@ -22,4 +22,6 @@ cargo install --git https://github.com/yixiaojiu/kimika kimika
 
 ## Document
 
-[docs/usage](/docs/usage.md)
+- [docs/usage](/docs/usage.md)
+- [docs/server](/docs/server.md)
+- [docs/configuration](/docs/configuration.md)

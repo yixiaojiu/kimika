@@ -296,7 +296,11 @@ where
             self.selected_item = 0;
         } else {
             if self.items.is_empty() && self.hint_message.is_some() {
-                utils::crossterm::clear_up_lines(1u16).unwrap();
+                if self.hint_message.is_some() {
+                    utils::crossterm::clear_up_lines(1u16).unwrap();
+                }
+            } else {
+                self.erase_printed_items();
             }
             self.items = items;
             self.selected_item = 0;

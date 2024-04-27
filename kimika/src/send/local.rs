@@ -37,7 +37,7 @@ pub async fn local_send(
             let mut receivers: Vec<select::SelectItem<String>> = Vec::new();
             loop {
                 let (address, register) = find_receiver(&socket_find).await.unwrap();
-                let label = format!("{} {}", register.alias, address.to_string());
+                let label = format!("{:10} {}", register.alias, address.to_string());
                 receivers.push(select::SelectItem {
                     label,
                     id: address.to_string(),

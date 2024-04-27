@@ -88,3 +88,15 @@ kimika receive -s -a 127.0.0.1:3941
 ```
 
 You can also don't specify the address, if you set the server in the configuration file.
+
+## Use with pipeline
+
+Such as: Using with [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
+
+```sh
+wl-paste | kimika send
+```
+
+```sh
+kimika receive | wl-copy
+```
