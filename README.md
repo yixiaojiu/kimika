@@ -12,6 +12,8 @@ Kimika is a CLI tool for sending text or files written in Rust, based on grpc. I
 - 💡 Support transfer through local network
 - 💪 Based on grpc
 
+![demo](assets/demo.gif)
+
 ## Installation
 
 Follow [tonic getting started](https://github.com/hyperium/tonic?tab=readme-ov-file#dependencies) to install `protobuf complier`
