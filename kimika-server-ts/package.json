@@ -1,31 +1,32 @@
 {
-	"name": "kimika-server-ts",
-	"module": "main.ts",
-	"version": "0.1.0",
-	"type": "commonjs",
-	"scripts": {
-		"dev": "tsx watch main.ts",
-		"start": "tsx main.ts",
-		"build": "tsup",
-		"format": "biome format --write .",
-		"lint": "biome lint ."
-	},
-	"devDependencies": {
-		"@biomejs/biome": "1.7.1",
-		"@types/node": "20",
-		"grpc_tools_node_protoc_ts": "^5.3.3",
-		"tsup": "^8.0.2",
-		"tsx": "^4.7.1",
-		"typescript": "^5.4.5"
-	},
-	"peerDependencies": {
-		"typescript": "^5.0.0"
-	},
-	"dependencies": {
-		"@grpc/grpc-js": "^1.10.4",
-		"cron": "^3.1.7",
-		"google-protobuf": "^3.21.2",
-		"log4js": "^6.9.1",
-		"nanoid": "^5.0.6"
-	}
+  "name": "kimika-server-ts",
+  "module": "main.ts",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "packageManager": "pnpm@9.0.6",
+  "scripts": {
+    "dev": "tsx watch main.ts",
+    "start": "tsx main.ts",
+    "build": "tsup",
+    "format": "biome format --write .",
+    "lint": "biome lint ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.7.1",
+    "@types/node": "20",
+    "grpc_tools_node_protoc_ts": "^5.3.3",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.10.4",
+    "cron": "^3.1.7",
+    "google-protobuf": "^3.21.2",
+    "log4js": "^6.9.1",
+    "nanoid": "^5.0.6"
+  }
 }
