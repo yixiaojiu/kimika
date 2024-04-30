@@ -57,7 +57,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: -p kimika --release --locked --target=${{ matrix.target }} --color=always --verbose
+          args: -p kimika --release --locked --target=${{ matrix.target }} --color=always
           use-cross: ${{ runner.os == 'Linux' }}
       - name: Package (*nix)
         if: runner.os != 'Windows'
