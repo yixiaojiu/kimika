@@ -36,6 +36,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install gcc-aarch64-linux-gnu
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -yq gcc-aarch64-linux-gnu
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
         with:
@@ -53,12 +57,10 @@ jobs:
         uses: Swatinem/rust-cache@v2.7.3
         with:
           key: ${{ matrix.target }}
+
       - name: Build binary
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: -p kimika --release --locked --target=${{ matrix.target }} --color=always
-          use-cross: ${{ runner.os == 'Linux' }}
+        run: cargo build -p kimika --release --locked --target=${{ matrix.target }}
+
       - name: Package (*nix)
         if: runner.os != 'Windows'
         run: |
@@ -68,9 +70,14 @@ jobs:
             kimika-${{ matrix.target }}.tar.gz
       - name: Package (Windows)
         if: runner.os == 'Windows'
+        env:
+          TARGET_NAME: yazi-${{ matrix.target }}
         run: |
-          7z a kimika-${{ matrix.target }}.zip LICENSE README.md \
-            ./target/${{ matrix.target }}/release/kimika.exe
+          New-Item -ItemType Directory -Path ${env:TARGET_NAME}
+          Copy-Item -Path "target\${{ matrix.target }}\release\kimika.exe" -Destination ${env:TARGET_NAME}
+          Copy-Item -Path "README.md", "LICENSE" -Destination ${env:TARGET_NAME}
+          Compress-Archive -Path ${env:TARGET_NAME} -DestinationPath "${env:TARGET_NAME}.zip"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

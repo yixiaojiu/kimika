@@ -26,9 +26,6 @@ jobs:
           node-version: lts/*
           registry-url: https://registry.npmjs.org/
 
-      - name: show dir
-        run: pwd
-
       - name: Install pnpm
         run: npm i pnpm@9.0.6 -g
 
