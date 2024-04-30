@@ -73,7 +73,7 @@ jobs:
       - name: Package (Windows)
         if: runner.os == 'Windows'
         env:
-          TARGET_NAME: yazi-${{ matrix.target }}
+          TARGET_NAME: kimika-${{ matrix.target }}
         run: |
           New-Item -ItemType Directory -Path ${env:TARGET_NAME}
           Copy-Item -Path "target\${{ matrix.target }}\release\kimika.exe" -Destination ${env:TARGET_NAME}
@@ -92,7 +92,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          draft: true
           files: |
             *.tar.gz
             *.zip
