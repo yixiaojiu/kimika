@@ -1,4 +1,4 @@
-name: Test-TS
+name: CI-TS
 
 on:
   push:
@@ -9,23 +9,27 @@ on:
     branches:
       - main
 
+defaults:
+  run:
+    working-directory: ./kimika-server-ts
+
 jobs:
-  ci:
+  ci-ts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Set Working Directory
-        working-directory: ./kimika-server-ts
-
-      - uses: pnpm/action-setup@v2
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
           cache: pnpm
 
-      - name: Install
-        run: pnpm install
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: true
 
       - name: Lint
         run: pnpm run lint
