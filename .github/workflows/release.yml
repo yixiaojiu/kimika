@@ -59,6 +59,8 @@ jobs:
           key: ${{ matrix.target }}
 
       - name: Build binary
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: /usr/bin/aarch64-linux-gnu-gcc
         run: cargo build -p kimika --release --locked --target=${{ matrix.target }}
 
       - name: Package (*nix)
