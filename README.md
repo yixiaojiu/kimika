@@ -35,3 +35,13 @@ brew install yixiaojiu/tap/kimika
 - [docs/usage](/docs/usage.md)
 - [docs/server](/docs/server.md)
 - [docs/configuration](/docs/configuration.md)
+
+## Procedure
+
+Local Area Network
+
+[local_procedure](assets/local_procedure.png)
+
+Remote Server
+
+[remote_procedure](assets/remote_procedure.png)
