@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 kimika_grpc = { path = "../kimika_grpc" }
 kimika_shared = { path = "../kimika_shared" }
-tokio = "1.39.2"
+tokio = {version = "1.39.2", features = ["rt-multi-thread", "macros", "sync"]}
 hyper = {version = "1.4.1", features = ["server", "http1"]}
 hyper-util = {version = "0.1.7", features = ["tokio"]}
 bytes = "1.7.1"
@@ -16,3 +16,4 @@ http-body-util = "0.1.2"
 dashmap = "6.0.1"
 tokio-stream = "0.1.15"
 http-body = "1.0.1"
+uuid = {version = "1.10.0", features = ["v4"]}

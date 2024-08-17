@@ -18,6 +18,11 @@ pub struct Transfer {
     pub receiver: Option<DataReceiver>,
 }
 
+pub struct Sender {
+    pub id: String,
+    pub alias: String,
+}
+
 pub struct Receiver {
     pub id: String,
     pub alias: String,
@@ -26,7 +31,7 @@ pub struct Receiver {
 pub struct Metadata {
     pub receiver_id: String,
     pub sender_id: String,
-    pub metadata_id: String,
+    pub id: String,
 }
 
 impl Transfer {

@@ -1,5 +1,6 @@
 mod data;
 mod service;
+mod utils;
 
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
@@ -8,7 +9,7 @@ use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
 #[tokio::main]
-pub async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr: SocketAddr = ([127, 0, 0, 1], 3000).into();
 
     let listener = TcpListener::bind(addr).await?;
