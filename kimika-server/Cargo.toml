@@ -16,4 +16,6 @@ http-body-util = "0.1.2"
 dashmap = "6.0.1"
 tokio-stream = "0.1.15"
 http-body = "1.0.1"
-uuid = {version = "1.10.0", features = ["v4"]}
+uuid = {version = "1.10.0", features = ["v4", "fast-rng", "macro-diagnostics"]}
+serde_json = "1.0.125"
+serde = {version =  "1.0.208", features = ["derive"]}

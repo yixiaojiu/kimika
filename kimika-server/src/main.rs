@@ -10,7 +10,7 @@ use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr: SocketAddr = ([127, 0, 0, 1], 3000).into();
+    let addr: SocketAddr = ([127, 0, 0, 1], 3939).into();
 
     let listener = TcpListener::bind(addr).await?;
 
