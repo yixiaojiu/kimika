@@ -3,6 +3,8 @@
 /examples
 **/examples
 
+/note
+
 node_modules
 
 kimika-server-ts/dist

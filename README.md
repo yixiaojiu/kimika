@@ -40,8 +40,8 @@ brew install yixiaojiu/tap/kimika
 
 Local Area Network
 
-[local_procedure](assets/local_procedure.png)
+![local_procedure](assets/local_procedure.png)
 
 Remote Server
 
-[remote_procedure](assets/remote_procedure.png)
+![remote_procedure](assets/remote_procedure.png)
