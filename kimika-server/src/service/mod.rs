@@ -1,4 +1,6 @@
+mod get_receivers;
 mod post_download;
+mod post_metadata;
 mod post_register;
 mod post_upload;
 
@@ -11,8 +13,8 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct Server {
-    sender: Arc<dashmap::DashMap<String, Mutex<data::Sender>>>,
-    receiver: Arc<dashmap::DashMap<String, Mutex<data::Receiver>>>,
+    sender: Arc<dashmap::DashMap<String, data::Sender>>,
+    receiver: Arc<dashmap::DashMap<String, data::Receiver>>,
     metadata: Arc<dashmap::DashMap<String, Mutex<data::Metadata>>>,
     transfer: Arc<dashmap::DashMap<String, Mutex<data::Transfer>>>,
 }
@@ -43,6 +45,8 @@ impl Server {
             (&hyper::Method::POST, "/register") => self.post_register(req).await,
             (&hyper::Method::POST, "/upload") => self.post_upload(req).await,
             (&hyper::Method::POST, "/download") => self.post_download(req).await,
+            (&hyper::Method::GET, "/receivers") => self.get_receivers(req).await,
+            (&hyper::Method::POST, "/metadata") => self.post_metadata(req).await,
             _ => {
                 let mut res = Response::new(hyper_utils::empty());
                 *res.status_mut() = hyper::StatusCode::NOT_FOUND;

@@ -1,6 +1,7 @@
 use bytes::Bytes;
 use http_body_util::combinators::BoxBody;
 use hyper::Response;
+use serde::Serialize;
 use tokio::sync::{mpsc, oneshot};
 
 pub struct DataSender {
@@ -23,6 +24,7 @@ pub struct Sender {
     pub alias: String,
 }
 
+#[derive(Clone, Serialize)]
 pub struct Receiver {
     pub id: String,
     pub alias: String,
