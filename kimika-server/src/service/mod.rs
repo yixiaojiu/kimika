@@ -1,3 +1,4 @@
+mod get_metadata;
 mod get_receivers;
 mod post_download;
 mod post_metadata;
@@ -13,18 +14,16 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct Server {
-    sender: Arc<dashmap::DashMap<String, data::Sender>>,
+    metadata: Arc<Mutex<dashmap::DashMap<String, data::Metadata>>>,
     receiver: Arc<dashmap::DashMap<String, data::Receiver>>,
-    metadata: Arc<dashmap::DashMap<String, Mutex<data::Metadata>>>,
     transfer: Arc<dashmap::DashMap<String, Mutex<data::Transfer>>>,
 }
 
 impl Clone for Server {
     fn clone(&self) -> Self {
         Self {
-            sender: Arc::clone(&self.sender),
-            receiver: Arc::clone(&self.receiver),
             metadata: Arc::clone(&self.metadata),
+            receiver: Arc::clone(&self.receiver),
             transfer: Arc::clone(&self.transfer),
         }
     }
@@ -33,9 +32,8 @@ impl Clone for Server {
 impl Server {
     pub fn new() -> Self {
         Self {
-            sender: Arc::new(dashmap::DashMap::new()),
+            metadata: Arc::new(Mutex::new(dashmap::DashMap::new())),
             receiver: Arc::new(dashmap::DashMap::new()),
-            metadata: Arc::new(dashmap::DashMap::new()),
             transfer: Arc::new(dashmap::DashMap::new()),
         }
     }
@@ -47,6 +45,7 @@ impl Server {
             (&hyper::Method::POST, "/download") => self.post_download(req).await,
             (&hyper::Method::GET, "/receivers") => self.get_receivers(req).await,
             (&hyper::Method::POST, "/metadata") => self.post_metadata(req).await,
+            (&hyper::Method::GET, "/metadata") => self.get_metadata(req).await,
             _ => {
                 let mut res = Response::new(hyper_utils::empty());
                 *res.status_mut() = hyper::StatusCode::NOT_FOUND;

@@ -7,16 +7,30 @@ use bytes::{Buf, Bytes};
 use http_body_util::BodyExt;
 use hyper::Response;
 use serde::{Deserialize, Serialize};
+use tokio::sync::oneshot;
 use uuid::Uuid;
 
 #[derive(Deserialize, Debug)]
-struct Payload {
+struct Metadata {
+    /// metadata unique id
+    id: String,
+    /// file or message
     metadata_type: String,
-    sender_id: String,
+    file_name: Option<String>,
+    file_type: Option<String>,
+    size: Option<u64>,
+}
+
+#[derive(Deserialize, Debug)]
+struct Payload {
+    receiver_id: String,
+    alias: String,
+    metadatas: Vec<Metadata>,
 }
 
 #[derive(Serialize)]
 struct ResponseBody {
+    selected_ids: Vec<String>,
     id: String,
     message: String,
 }
@@ -26,11 +40,52 @@ impl Server {
         let body = req.collect().await?.aggregate();
         let payload: Payload = serde_json::from_reader(body.reader())?;
 
+        let receiver_id = payload.receiver_id;
+        let metadata_guard = self.metadata.lock().await;
         let uuid = Uuid::new_v4().to_string();
+        let (tx, rx) = oneshot::channel();
+        let metadatas = payload
+            .metadatas
+            .iter()
+            .map(|v| data::MetadataItem {
+                id: v.id.clone(),
+                metadata_type: v.metadata_type.clone(),
+                file_name: v.file_name.clone(),
+                file_type: v.file_type.clone(),
+                size: v.size.clone(),
+            })
+            .collect::<Vec<data::MetadataItem>>();
+
+        metadata_guard.insert(
+            receiver_id.clone(),
+            data::Metadata {
+                sender: data::Sender {
+                    alias: payload.alias,
+                },
+                receiver_id: receiver_id.clone(),
+                metadatas: metadatas,
+                selected_metadata_tx: tx,
+            },
+        );
+
+        drop(metadata_guard);
+
+        let selected_metadata_ids = rx.await?;
+        let metadata_guard = self.metadata.lock().await;
+        if let Some(mut metadata) = metadata_guard.get_mut(&receiver_id) {
+            metadata
+                .metadatas
+                .retain(|v| selected_metadata_ids.contains(&v.id));
+        } else {
+            // TODO error handle
+        }
+
+        drop(metadata_guard);
 
         let body = hyper_utils::full(Bytes::from(
             serde_json::to_string(&ResponseBody {
                 id: uuid,
+                selected_ids: selected_metadata_ids,
                 message: String::from("ok"),
             })
             .unwrap(),

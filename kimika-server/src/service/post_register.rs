@@ -12,7 +12,6 @@ use uuid::Uuid;
 #[derive(Deserialize, Debug)]
 struct Payload {
     alias: String,
-    role: String,
 }
 
 #[derive(Serialize)]
@@ -22,26 +21,19 @@ struct ResponseBody {
 }
 
 impl Server {
+    /// receiver register
     pub async fn post_register(self, req: types::RequestType) -> types::ResponseType {
         let body = req.collect().await?.aggregate();
         let payload: Payload = serde_json::from_reader(body.reader())?;
 
         let uuid = Uuid::new_v4().to_string();
 
-        if payload.role == "sender" {
-            let sender = data::Sender {
-                id: uuid.clone(),
-                alias: payload.alias.clone(),
-            };
+        let receiver = data::Receiver {
+            id: uuid.clone(),
+            alias: payload.alias.clone(),
+        };
 
-            self.sender.insert(uuid.clone(), sender);
-        } else {
-            let receiver = data::Receiver {
-                id: uuid.clone(),
-                alias: payload.alias.clone(),
-            };
-            self.receiver.insert(uuid.clone(), receiver);
-        }
+        self.receiver.insert(uuid.clone(), receiver);
 
         let body = hyper_utils::full(Bytes::from(
             serde_json::to_string(&ResponseBody {

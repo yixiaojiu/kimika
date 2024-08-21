@@ -19,21 +19,32 @@ pub struct Transfer {
     pub receiver: Option<DataReceiver>,
 }
 
-pub struct Sender {
+#[derive(Clone, Serialize)]
+pub struct MetadataItem {
     pub id: String,
+    /// file or message
+    pub metadata_type: String,
+    pub file_name: Option<String>,
+    pub file_type: Option<String>,
+    pub size: Option<u64>,
+}
+
+pub struct Sender {
     pub alias: String,
+}
+
+pub struct Metadata {
+    /// sender alias
+    pub sender: Sender,
+    pub receiver_id: String,
+    pub metadatas: Vec<MetadataItem>,
+    pub selected_metadata_tx: oneshot::Sender<Vec<String>>,
 }
 
 #[derive(Clone, Serialize)]
 pub struct Receiver {
     pub id: String,
     pub alias: String,
-}
-
-pub struct Metadata {
-    pub receiver_id: String,
-    pub sender_id: String,
-    pub id: String,
 }
 
 impl Transfer {
