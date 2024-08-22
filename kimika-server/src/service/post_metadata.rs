@@ -7,7 +7,7 @@ use bytes::{Buf, Bytes};
 use http_body_util::BodyExt;
 use hyper::Response;
 use serde::{Deserialize, Serialize};
-use tokio::sync::oneshot;
+use tokio::sync::mpsc;
 use uuid::Uuid;
 
 #[derive(Deserialize, Debug)]
@@ -43,7 +43,7 @@ impl Server {
         let receiver_id = payload.receiver_id;
         let metadata_guard = self.metadata.lock().await;
         let uuid = Uuid::new_v4().to_string();
-        let (tx, rx) = oneshot::channel();
+        let (tx, mut rx) = mpsc::channel(1);
         let metadatas = payload
             .metadatas
             .iter()
@@ -70,14 +70,15 @@ impl Server {
 
         drop(metadata_guard);
 
-        let selected_metadata_ids = rx.await?;
+        // TODO none handle
+        let selected_metadata_ids = rx.recv().await.unwrap();
         let metadata_guard = self.metadata.lock().await;
         if let Some(mut metadata) = metadata_guard.get_mut(&receiver_id) {
             metadata
                 .metadatas
                 .retain(|v| selected_metadata_ids.contains(&v.id));
         } else {
-            // TODO error handle
+            // TODO none handle
         }
 
         drop(metadata_guard);

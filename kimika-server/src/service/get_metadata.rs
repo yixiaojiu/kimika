@@ -3,13 +3,12 @@ use crate::data;
 use crate::utils::hyper_utils;
 use crate::utils::types;
 
-use bytes::{Buf, Bytes};
-use http_body_util::BodyExt;
+use bytes::Bytes;
 use hyper::Response;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
-struct Payload {
+struct Params {
     /// receiver id
     id: String,
 }
@@ -21,15 +20,15 @@ struct ResponseBody {
 }
 
 impl Server {
-    /// receiver register
     pub async fn get_metadata(self, req: types::RequestType) -> types::ResponseType {
-        let body = req.collect().await?.aggregate();
-        let payload: Payload = serde_json::from_reader(body.reader())?;
+        // TODO none hander
+        let query = req.uri().query().unwrap();
+        let params: Params = serde_qs::from_str(query)?;
 
         let metadata_guard = self.metadata.lock().await;
-        let aaaa = metadata_guard.get(&payload.id);
+        let metadata_entry = metadata_guard.get(&params.id);
 
-        if let Some(metadata) = aaaa {
+        if let Some(metadata) = metadata_entry {
             let metadatas = metadata.metadatas.clone();
             let body = hyper_utils::full(Bytes::from(
                 serde_json::to_string(&ResponseBody {

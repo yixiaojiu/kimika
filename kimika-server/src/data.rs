@@ -38,7 +38,7 @@ pub struct Metadata {
     pub sender: Sender,
     pub receiver_id: String,
     pub metadatas: Vec<MetadataItem>,
-    pub selected_metadata_tx: oneshot::Sender<Vec<String>>,
+    pub selected_metadata_tx: mpsc::Sender<Vec<String>>,
 }
 
 #[derive(Clone, Serialize)]
