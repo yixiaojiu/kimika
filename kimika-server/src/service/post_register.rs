@@ -33,7 +33,9 @@ impl Server {
             alias: payload.alias.clone(),
         };
 
-        self.receiver.insert(uuid.clone(), receiver);
+        let receiver_guard = self.receiver.lock().await;
+        receiver_guard.insert(uuid.clone(), receiver);
+        drop(receiver_guard);
 
         let body = hyper_utils::full(Bytes::from(
             serde_json::to_string(&ResponseBody {

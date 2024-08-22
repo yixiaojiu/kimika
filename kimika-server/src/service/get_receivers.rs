@@ -17,9 +17,12 @@ impl Server {
     pub async fn get_receivers(self, _req: types::RequestType) -> types::ResponseType {
         let mut receivers: Vec<data::Receiver> = vec![];
 
-        for item in self.receiver.iter() {
+        let receiver_guard = self.receiver.lock().await;
+
+        for item in receiver_guard.iter() {
             receivers.push(item.value().clone());
         }
+        drop(receiver_guard);
 
         let body = hyper_utils::full(Bytes::from(
             serde_json::to_string(&ResponseBody {

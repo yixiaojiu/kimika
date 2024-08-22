@@ -15,8 +15,8 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct Server {
+    receiver: Arc<Mutex<dashmap::DashMap<String, data::Receiver>>>,
     metadata: Arc<Mutex<dashmap::DashMap<String, data::Metadata>>>,
-    receiver: Arc<dashmap::DashMap<String, data::Receiver>>,
     transfer: Arc<dashmap::DashMap<String, Mutex<data::Transfer>>>,
 }
 
@@ -34,7 +34,7 @@ impl Server {
     pub fn new() -> Self {
         Self {
             metadata: Arc::new(Mutex::new(dashmap::DashMap::new())),
-            receiver: Arc::new(dashmap::DashMap::new()),
+            receiver: Arc::new(Mutex::new(dashmap::DashMap::new())),
             transfer: Arc::new(dashmap::DashMap::new()),
         }
     }
