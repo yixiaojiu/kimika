@@ -5,16 +5,44 @@ use crate::utils::types;
 use bytes::Bytes;
 use http_body_util::{BodyExt, StreamBody};
 use hyper::Response;
+use serde::Deserialize;
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
+#[derive(Deserialize, Debug)]
+struct Params {
+    token: String,
+    /// sender id
+    id: String,
+    /// receiver id
+    receiver: String,
+}
+
 impl Server {
     pub async fn post_upload(self, req: types::RequestType) -> types::ResponseType {
-        let (_, req_body) = req.into_parts();
+        let (parts, req_body) = req.into_parts();
+        // TODO none hander
+        let query = parts.uri.query().unwrap();
+        let params: Params = serde_qs::from_str(query)?;
+
+        let metadata_guard = self.metadata.lock().await;
+        // TODO none hander
+        let metadata_entry = metadata_guard.get(&params.receiver);
+        // TODO check
+        if let Some(ref metadata) = metadata_entry {
+            let sender_check = metadata.sender.id == params.id;
+            let metadata_check = metadata
+                .metadata_list
+                .iter()
+                .any(|v| v.token == params.token);
+        } else {
+        }
+        drop(metadata_entry);
+        drop(metadata_guard);
 
         let transfer_mutex = self
             .transfer
-            .entry(String::from("test"))
+            .entry(params.token.clone())
             .or_insert_with(|| Mutex::new(data::Transfer::new()));
 
         let mut transfer_guard = transfer_mutex.lock().await;
@@ -23,8 +51,8 @@ impl Server {
             mpsc::channel::<Result<http_body::Frame<Bytes>, hyper::Error>>(1);
         match transfer_guard.receiver.take() {
             Some(receiver) => {
-                let aa = Response::new(req_body.boxed());
-                receiver.res_sender.send(aa).unwrap();
+                let res = Response::new(req_body.boxed());
+                receiver.res_sender.send(res).unwrap();
             }
             None => {
                 transfer_guard.sender.replace(data::DataSender {

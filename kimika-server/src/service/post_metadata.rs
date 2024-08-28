@@ -25,12 +25,19 @@ struct Metadata {
 struct Payload {
     receiver_id: String,
     alias: String,
-    metadatas: Vec<Metadata>,
+    metadata: Vec<Metadata>,
+}
+
+#[derive(Serialize)]
+struct ResponseMetadata {
+    id: String,
+    token: String,
 }
 
 #[derive(Serialize)]
 struct ResponseBody {
-    selected_ids: Vec<String>,
+    selected_metadata: Vec<ResponseMetadata>,
+    /// sender id
     id: String,
     message: String,
 }
@@ -45,10 +52,11 @@ impl Server {
         let uuid = Uuid::new_v4().to_string();
         let (tx, mut rx) = mpsc::channel(1);
         let metadatas = payload
-            .metadatas
+            .metadata
             .iter()
             .map(|v| data::MetadataItem {
                 id: v.id.clone(),
+                token: Uuid::new_v4().to_string(),
                 metadata_type: v.metadata_type.clone(),
                 file_name: v.file_name.clone(),
                 file_type: v.file_type.clone(),
@@ -60,10 +68,11 @@ impl Server {
             receiver_id.clone(),
             data::Metadata {
                 sender: data::Sender {
+                    id: uuid.clone(),
                     alias: payload.alias,
                 },
                 receiver_id: receiver_id.clone(),
-                metadatas: metadatas,
+                metadata_list: metadatas,
                 selected_metadata_tx: tx,
             },
         );
@@ -71,12 +80,21 @@ impl Server {
         drop(metadata_guard);
 
         // TODO none handle
-        let selected_metadata_ids = rx.recv().await.unwrap();
+        let selected_metadata_tokens = rx.recv().await.unwrap();
+        let mut selected_metadata = Vec::new();
         let metadata_guard = self.metadata.lock().await;
         if let Some(mut metadata) = metadata_guard.get_mut(&receiver_id) {
             metadata
-                .metadatas
-                .retain(|v| selected_metadata_ids.contains(&v.id));
+                .metadata_list
+                .retain(|v| selected_metadata_tokens.contains(&v.token));
+            selected_metadata = metadata
+                .metadata_list
+                .iter()
+                .map(|v| ResponseMetadata {
+                    id: v.id.clone(),
+                    token: v.token.clone(),
+                })
+                .collect();
         } else {
             // TODO none handle
         }
@@ -86,7 +104,7 @@ impl Server {
         let body = hyper_utils::full(Bytes::from(
             serde_json::to_string(&ResponseBody {
                 id: uuid,
-                selected_ids: selected_metadata_ids,
+                selected_metadata,
                 message: String::from("ok"),
             })
             .unwrap(),

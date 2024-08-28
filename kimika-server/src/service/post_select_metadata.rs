@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 struct Payload {
     /// receiver id
     id: String,
-    /// metadata unique id
-    selected_ids: Vec<String>,
+    /// metadata unique token
+    selected_tokens: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -32,7 +32,7 @@ impl Server {
         if let Some(metadata) = metadata_entry {
             metadata
                 .selected_metadata_tx
-                .send(payload.selected_ids)
+                .send(payload.selected_tokens)
                 .await?;
         }
 

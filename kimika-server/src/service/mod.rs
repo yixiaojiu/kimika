@@ -15,8 +15,11 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct Server {
+    // key id
     receiver: Arc<Mutex<dashmap::DashMap<String, data::Receiver>>>,
+    // key: receiver id
     metadata: Arc<Mutex<dashmap::DashMap<String, data::Metadata>>>,
+    // key: metadata token
     transfer: Arc<dashmap::DashMap<String, Mutex<data::Transfer>>>,
 }
 

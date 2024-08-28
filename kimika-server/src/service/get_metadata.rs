@@ -29,7 +29,7 @@ impl Server {
         let metadata_entry = metadata_guard.get(&params.id);
 
         if let Some(metadata) = metadata_entry {
-            let metadatas = metadata.metadatas.clone();
+            let metadatas = metadata.metadata_list.clone();
             let body = hyper_utils::full(Bytes::from(
                 serde_json::to_string(&ResponseBody {
                     metadatas: metadatas,

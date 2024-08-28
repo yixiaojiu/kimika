@@ -22,6 +22,7 @@ pub struct Transfer {
 #[derive(Clone, Serialize)]
 pub struct MetadataItem {
     pub id: String,
+    pub token: String,
     /// file or message
     pub metadata_type: String,
     pub file_name: Option<String>,
@@ -31,13 +32,14 @@ pub struct MetadataItem {
 
 pub struct Sender {
     pub alias: String,
+    pub id: String,
 }
 
 pub struct Metadata {
     /// sender alias
     pub sender: Sender,
     pub receiver_id: String,
-    pub metadatas: Vec<MetadataItem>,
+    pub metadata_list: Vec<MetadataItem>,
     pub selected_metadata_tx: mpsc::Sender<Vec<String>>,
 }
 
