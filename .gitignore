@@ -9,3 +9,5 @@ node_modules
 
 kimika-server-ts/dist
 kimika-server-ts/logs
+
+.DS_Store
