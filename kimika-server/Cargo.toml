@@ -6,8 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-kimika_grpc = { path = "../kimika_grpc" }
-kimika_shared = { path = "../kimika_shared" }
 tokio = {version = "1.39.2", features = ["rt-multi-thread", "macros", "sync"]}
 hyper = {version = "1.4.1", features = ["server", "http1"]}
 hyper-util = {version = "0.1.7", features = ["tokio"]}

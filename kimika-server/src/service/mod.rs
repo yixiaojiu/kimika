@@ -50,7 +50,7 @@ impl Server {
             (&hyper::Method::GET, "/receivers") => self.get_receivers(req).await,
             (&hyper::Method::POST, "/metadata") => self.post_metadata(req).await,
             (&hyper::Method::GET, "/metadata") => self.get_metadata(req).await,
-            (&hyper::Method::POST, "/select/metadata") => self.post_select_metadata(req).await,
+            (&hyper::Method::POST, "/metadata/select") => self.post_select_metadata(req).await,
             _ => {
                 let mut res = Response::new(hyper_utils::empty());
                 *res.status_mut() = hyper::StatusCode::NOT_FOUND;

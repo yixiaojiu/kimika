@@ -1,5 +1,6 @@
 [alias]
 kimika = "run -p kimika --"
 server = "run -p kimika-server --"
+example = "run -p kimika --example"
 local_rf = "run -p kimika -- receive --save-folder ./examples/target"
 local_sf = "run -p kimika -- send -p ./examples/bar --port 3940"

@@ -936,8 +936,6 @@ dependencies = [
  "http-body-util",
  "hyper 1.4.1",
  "hyper-util",
- "kimika_grpc",
- "kimika_shared",
  "serde",
  "serde_json",
  "serde_qs",
