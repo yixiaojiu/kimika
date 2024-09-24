@@ -1,6 +1,5 @@
 mod config;
 mod receive;
-mod request;
 mod send;
 mod utils;
 
