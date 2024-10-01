@@ -1,13 +1,11 @@
 mod local;
 mod local_grpc;
 mod remote;
-mod remote_grpc;
-mod remote_http;
 mod udp;
-
-use clap::Args;
+pub mod utils;
 
 use crate::config;
+use clap::Args;
 use crossterm::{style::Stylize, tty::IsTty};
 
 /// send file
@@ -54,8 +52,7 @@ pub async fn send(
     config.update_from_send_args(&args);
 
     if args.server {
-        // remote::remote_send(&args, &config).await?;
-        remote_http::remote_send(&args, &config).await?;
+        remote::remote_send(&args, &config).await?;
     } else {
         local::local_send(&args, &config).await?;
     }

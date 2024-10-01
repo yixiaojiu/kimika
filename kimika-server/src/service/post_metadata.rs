@@ -36,7 +36,7 @@ struct ResponseMetadata {
 
 #[derive(Serialize)]
 struct ResponseBody {
-    selected_metadata: Vec<ResponseMetadata>,
+    selected_metadata_list: Vec<ResponseMetadata>,
     /// sender id
     id: String,
     message: String,
@@ -81,13 +81,13 @@ impl Server {
 
         // TODO none handle
         let selected_metadata_tokens = rx.recv().await.unwrap();
-        let mut selected_metadata = Vec::new();
+        let mut selected_metadata_list = Vec::new();
         let metadata_guard = self.metadata.lock().await;
         if let Some(mut metadata) = metadata_guard.get_mut(&receiver_id) {
             metadata
                 .metadata_list
                 .retain(|v| selected_metadata_tokens.contains(&v.token));
-            selected_metadata = metadata
+            selected_metadata_list = metadata
                 .metadata_list
                 .iter()
                 .map(|v| ResponseMetadata {
@@ -104,7 +104,7 @@ impl Server {
         let body = hyper_utils::full(Bytes::from(
             serde_json::to_string(&ResponseBody {
                 id: uuid,
-                selected_metadata,
+                selected_metadata_list,
                 message: String::from("ok"),
             })
             .unwrap(),

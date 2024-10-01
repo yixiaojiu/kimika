@@ -1,49 +1,41 @@
-use super::{remote_grpc, SendArgs};
+use super::utils::{Content, ContentType};
+use super::SendArgs;
+use crate::request::remote as request_remote;
 use crate::{config, utils::handle, utils::select};
 use crossterm::style::Stylize;
+use std::sync::Arc;
 use std::{fs, path::PathBuf};
-use tokio::sync::mpsc;
-
-pub struct Content {
-    pub message: Option<String>,
-    pub path: Option<PathBuf>,
-    pub name: Option<String>,
-    pub size: Option<u64>,
-}
+use tokio::{sync::mpsc, time};
+use uuid::Uuid;
 
 pub async fn remote_send(
     args: &SendArgs,
     config: &config::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let message = handle::handle_message(args);
-
-    let content = if let Some(path) = &args.path {
-        let pathbuf = PathBuf::from(path);
-        if !pathbuf.exists() {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "file not exists",
-            ))?
-        }
-        let metadata = fs::metadata(&pathbuf).expect("get metadata failed");
-        let filename = pathbuf
-            .file_name()
-            .expect("invalid file name")
-            .to_str()
-            .unwrap();
-        Content {
-            message: None,
-            path: Some(pathbuf.clone()),
-            name: Some(filename.to_string()),
-            size: Some(metadata.len()),
-        }
-    } else {
-        Content {
-            message,
+    let mut content_list = Vec::new();
+    if let Some(message) = handle::handle_message(args) {
+        content_list.push(Content {
+            id: Uuid::new_v4().to_string(),
+            content_type: ContentType::Message,
+            message: Some(message),
             path: None,
-            name: None,
-            size: None,
+        });
+    }
+    if let Some(path) = &args.path {
+        let pathbuf = PathBuf::from(path);
+
+        if !pathbuf.exists() {
+            return Err("file not exists".into());
         }
+        if pathbuf.is_dir() {
+            return Err("send directory is not supported".into());
+        }
+        content_list.push(Content {
+            id: Uuid::new_v4().to_string(),
+            content_type: ContentType::File,
+            message: None,
+            path: Some(pathbuf),
+        });
     };
 
     let address = if let Some(addr) = handle::handle_address(args.address.clone(), config) {
@@ -53,57 +45,95 @@ pub async fn remote_send(
         return Ok(());
     };
 
-    let mut client = remote_grpc::create_client(address)
-        .await
-        .expect("connect remote server failed");
-    println!("{} {}", "Connected to remote server: ".green(), address);
+    let request = Arc::new(request_remote::RequestClient::new(&address));
 
-    let register_res = remote_grpc::register_content(&mut client, &content)
-        .await
-        .expect("register content failed");
+    let (tx, mut rx) = mpsc::channel::<Vec<select::SelectItem<String>>>(1);
 
-    let mut receiver_res = remote_grpc::get_receivers(&mut client)
-        .await
-        .expect("get receivers failed");
-
-    #[allow(unused_assignments)]
-    let mut receiver_id = String::new();
-    let sender_id = register_res.sender_id;
-    let content_id = register_res.content_id;
-
-    let (tx, mut rx) = mpsc::channel(1);
-    tokio::spawn(async move {
-        while let Some(res) = receiver_res.message().await.unwrap() {
-            let receiver_iter = res.receivers.iter().map(|receiver| select::SelectItem {
-                label: format!("{:10} {}", receiver.alias, receiver.ip),
-                id: receiver.receiver_id.clone(),
-            });
-            tx.send(receiver_iter.collect()).await.unwrap();
+    loop {
+        let res = request.get_receivers().await.expect("");
+        let receiver_iter = res.receivers.iter().map(|receiver| select::SelectItem {
+            id: receiver.id.clone(),
+            label: receiver.alias.clone(),
+        });
+        let result = tx.send(receiver_iter.collect()).await;
+        if result.is_err() {
+            break;
         }
-    });
+        time::sleep(time::Duration::from_secs(1)).await;
+    }
 
-    if let Some(id) = select::receiver_select(&mut rx)
+    let selected_receiver_id = if let Some(id) = select::receiver_select(&mut rx)
         .await
         .expect("select receiver failed")
     {
-        receiver_id = id;
+        id
     } else {
         return Ok(());
-    }
+    };
 
-    let mut choose_res =
-        remote_grpc::choose_receiver(&mut client, receiver_id.clone(), sender_id.clone())
-            .await
-            .expect("request choose receiver failed");
+    let metadata_list: Vec<request_remote::Metadata> = content_list
+        .iter()
+        .map(|content| match content.content_type {
+            ContentType::Message => request_remote::Metadata {
+                id: content.id.clone(),
+                metadata_type: "message".to_string(),
+                file_name: None,
+                file_type: None,
+                size: None,
+            },
+            ContentType::File => {
+                let pathbuf = content.path.as_ref().unwrap();
+                let metadata = fs::metadata(pathbuf).expect("get metadata failed");
+                let filename = pathbuf
+                    .file_name()
+                    .expect("invalid file name")
+                    .to_str()
+                    .unwrap();
+                request_remote::Metadata {
+                    id: content.id.clone(),
+                    metadata_type: "file".to_string(),
+                    file_name: Some(filename.to_string()),
+                    file_type: Some("text".to_string()),
+                    size: Some(metadata.len()),
+                }
+            }
+        })
+        .collect();
 
-    while let Some(_) = choose_res.message().await? {
-        println!("Start sending");
-        break;
-    }
-
-    remote_grpc::send(&mut client, content_id, &content)
+    let res = request
+        .post_metadata(&request_remote::PostMetadataPayload {
+            receiver_id: selected_receiver_id.clone(),
+            alias: args.alias.clone().unwrap(),
+            metadata: metadata_list,
+        })
         .await
-        .expect("send content failed");
+        .expect("POST metadata failed");
+
+    for metadata in res.selected_metadata_list {
+        let content_list = content_list.clone();
+        let sender_id = res.id.clone();
+        let receiver_id = selected_receiver_id.clone();
+        let token = metadata.token.clone();
+        let request = Arc::clone(&request);
+
+        tokio::spawn(async move {
+            let content = content_list
+                .iter()
+                .find(|content| content.id == metadata.id)
+                .unwrap();
+            request
+                .post_upload(
+                    content,
+                    request_remote::PostUploadParams {
+                        id: sender_id,
+                        receiver: receiver_id,
+                        token,
+                    },
+                )
+                .await
+                .expect("post upload failed");
+        });
+    }
 
     Ok(())
 }
