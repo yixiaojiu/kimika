@@ -6,10 +6,22 @@ use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use std::net::SocketAddr;
+use tklog::{async_error, ASYNC_LOG, LEVEL, MODE};
 use tokio::net::TcpListener;
+
+async fn async_log_init() {
+    ASYNC_LOG
+        .set_console(true)
+        .set_level(LEVEL::Info)
+        .set_formatter("{time} {level} {message}\n")
+        .set_cutmode_by_time("./log/kimika.log", MODE::DAY, 5, false)
+        .await;
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    async_log_init().await;
+
     let addr: SocketAddr = ([127, 0, 0, 1], 3939).into();
 
     let listener = TcpListener::bind(addr).await?;
@@ -29,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .serve_connection(TokioIo::new(tcp), server_service)
                 .await
             {
-                println!("Error serving connection: {:?}", err);
+                async_error!("Error serving connection: ", format!("{:?}", err));
             }
         });
     }

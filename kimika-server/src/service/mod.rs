@@ -12,6 +12,7 @@ use crate::utils::types;
 
 use hyper::Response;
 use std::sync::Arc;
+use tklog::async_info;
 use tokio::sync::Mutex;
 
 pub struct Server {
@@ -43,7 +44,11 @@ impl Server {
     }
 
     pub async fn handle(self, req: types::RequestType) -> types::ResponseType {
-        match (req.method(), req.uri().path()) {
+        let method = req.method();
+        let path = req.uri().path();
+        async_info!(format!("[{}] [{}]", method, path));
+
+        match (method, path) {
             (&hyper::Method::POST, "/register") => self.post_register(req).await,
             (&hyper::Method::POST, "/upload") => self.post_upload(req).await,
             (&hyper::Method::POST, "/download") => self.post_download(req).await,
