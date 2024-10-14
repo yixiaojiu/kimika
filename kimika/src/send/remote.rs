@@ -3,7 +3,6 @@ use super::SendArgs;
 use crate::request::remote as request_remote;
 use crate::{config, utils::handle, utils::select};
 use crossterm::style::Stylize;
-use std::sync::Arc;
 use std::{fs, path::PathBuf};
 use tokio::{sync::mpsc, time};
 use uuid::Uuid;
@@ -45,7 +44,7 @@ pub async fn remote_send(
         return Ok(());
     };
 
-    let request = Arc::new(request_remote::RequestClient::new(&address));
+    let request = request_remote::RequestClient::new(&address);
 
     let (tx, mut rx) = mpsc::channel::<Vec<select::SelectItem<String>>>(1);
 
@@ -114,25 +113,22 @@ pub async fn remote_send(
         let sender_id = res.id.clone();
         let receiver_id = selected_receiver_id.clone();
         let token = metadata.token.clone();
-        let request = Arc::clone(&request);
 
-        tokio::spawn(async move {
-            let content = content_list
-                .iter()
-                .find(|content| content.id == metadata.id)
-                .unwrap();
-            request
-                .post_upload(
-                    content,
-                    request_remote::PostUploadParams {
-                        id: sender_id,
-                        receiver: receiver_id,
-                        token,
-                    },
-                )
-                .await
-                .expect("post upload failed");
-        });
+        let content = content_list
+            .iter()
+            .find(|content| content.id == metadata.id)
+            .unwrap();
+        request
+            .post_upload(
+                content,
+                request_remote::PostUploadParams {
+                    id: sender_id,
+                    receiver: receiver_id,
+                    token,
+                },
+            )
+            .await
+            .expect("post upload failed");
     }
 
     Ok(())

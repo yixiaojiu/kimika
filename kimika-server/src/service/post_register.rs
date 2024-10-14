@@ -16,6 +16,7 @@ struct Payload {
 
 #[derive(Serialize)]
 struct ResponseBody {
+    /// receiver id
     id: String,
     message: String,
 }

@@ -26,6 +26,18 @@ pub struct Metadata {
     pub size: Option<u64>,
 }
 
+/// server metadata structure
+#[derive(Deserialize)]
+pub struct MetadataItem {
+    pub id: String,
+    pub token: String,
+    /// file or message
+    pub metadata_type: String,
+    pub file_name: Option<String>,
+    pub file_type: Option<String>,
+    pub size: Option<u64>,
+}
+
 /** ===================================== */
 
 #[derive(Deserialize)]
@@ -70,6 +82,48 @@ pub struct PostUploadParams {
 
 /** ===================================== */
 
+#[derive(Serialize)]
+pub struct PostRegisterPayload {
+    alias: String,
+}
+
+#[derive(Deserialize)]
+pub struct PostRegisterResponse {
+    pub id: String,
+    pub message: String,
+}
+
+/** ===================================== */
+
+#[derive(Serialize)]
+pub struct GetMetadataParams {
+    /// receiver id
+    pub id: String,
+}
+
+#[derive(Deserialize)]
+pub struct GetMetadataResponse {
+    pub metadatas: Vec<MetadataItem>,
+    pub message: String,
+}
+
+/** ===================================== */
+
+#[derive(Serialize)]
+pub struct PostSelectMetadataPayload {
+    /// receiver id
+    pub id: String,
+    /// metadata unique token
+    pub selected_tokens: Vec<String>,
+}
+
+#[derive(Deserialize)]
+pub struct PostSelectMetadataResponse {
+    pub message: String,
+}
+
+/** ===================================== */
+
 pub struct RequestClient {
     url: Url,
 }
@@ -82,7 +136,10 @@ impl RequestClient {
     }
 
     pub async fn get_receivers(&self) -> Result<GetReceiversResponse, reqwest::Error> {
-        let result = Client::new().get(self.url.clone()).send().await?;
+        let mut url = self.url.clone();
+        url.set_path("/receivers");
+
+        let result = Client::new().get(url).send().await?;
         Ok(result.json().await.unwrap())
     }
 
@@ -90,11 +147,10 @@ impl RequestClient {
         &self,
         payload: &PostMetadataPayload,
     ) -> Result<PostMetadataResponse, reqwest::Error> {
-        let result = Client::new()
-            .post(self.url.clone())
-            .json(payload)
-            .send()
-            .await?;
+        let mut url = self.url.clone();
+        url.set_path("/metadata");
+
+        let result = Client::new().post(url).json(payload).send().await?;
         Ok(result.json().await.unwrap())
     }
 
@@ -103,7 +159,10 @@ impl RequestClient {
         content: &Content,
         payload: PostUploadParams,
     ) -> Result<(), reqwest::Error> {
-        let request_builder = Client::new().post(self.url.clone()).query(&payload);
+        let mut url = self.url.clone();
+        url.set_path("/upload");
+
+        let request_builder = Client::new().post(url).query(&payload);
 
         match content.content_type {
             ContentType::File => {
@@ -156,5 +215,45 @@ impl RequestClient {
             }
         }
         Ok(())
+    }
+
+    pub async fn post_register(
+        &self,
+        alias: String,
+    ) -> Result<PostRegisterResponse, reqwest::Error> {
+        let mut url = self.url.clone();
+        url.set_path("/register");
+
+        let result = Client::new()
+            .post(url)
+            .json(&PostRegisterPayload { alias })
+            .send()
+            .await?;
+        Ok(result.json().await.unwrap())
+    }
+
+    pub async fn get_metadata(
+        &self,
+        receiver_id: String,
+    ) -> Result<GetMetadataResponse, reqwest::Error> {
+        let mut url = self.url.clone();
+        url.set_path("/metadata");
+        url.set_query(Some(
+            serde_qs::to_string(&GetMetadataParams { id: receiver_id })
+                .unwrap()
+                .as_str(),
+        ));
+        let result = Client::new().get(url).send().await?;
+        Ok(result.json().await.unwrap())
+    }
+
+    pub async fn post_select_metadata(
+        &self,
+        payload: &PostSelectMetadataPayload,
+    ) -> Result<PostSelectMetadataResponse, reqwest::Error> {
+        let mut url = self.url.clone();
+        url.set_path("/metadata/select");
+        let result = Client::new().post(url).json(payload).send().await?;
+        Ok(result.json().await.unwrap())
     }
 }

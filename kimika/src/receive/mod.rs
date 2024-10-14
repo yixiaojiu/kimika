@@ -1,6 +1,7 @@
 mod local;
 mod local_grpc;
 mod remote;
+mod remote_bark;
 mod remote_grpc;
 mod udp;
 
@@ -39,7 +40,7 @@ pub async fn receive(
     config.update_from_receive_args(&args);
 
     if args.server {
-        remote::remote_receive(&args, &config).await?;
+        remote_bark::remote_receive(&args, &config).await?;
     } else {
         local::local_receive(&args, &config).await?;
     }
