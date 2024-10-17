@@ -40,7 +40,13 @@ impl Server {
             let res = Response::new(body);
             Ok(res)
         } else {
-            let body = hyper_utils::full("cannot find metadata from id");
+            let body = hyper_utils::full(Bytes::from(
+                serde_json::to_string(&ResponseBody {
+                    metadatas: vec![],
+                    message: String::from("cannot find metadata from id"),
+                })
+                .unwrap(),
+            ));
             let mut res = Response::new(body);
             *res.status_mut() = hyper::StatusCode::BAD_REQUEST;
             Ok(res)

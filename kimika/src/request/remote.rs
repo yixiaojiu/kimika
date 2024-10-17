@@ -1,5 +1,6 @@
 use crate::send::utils::{Content, ContentType};
 use crate::utils;
+use bytes::Bytes;
 use reqwest::{Body, Client, Url};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
@@ -27,7 +28,7 @@ pub struct Metadata {
 }
 
 /// server metadata structure
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct MetadataItem {
     pub id: String,
     pub token: String,
@@ -124,6 +125,15 @@ pub struct PostSelectMetadataResponse {
 
 /** ===================================== */
 
+#[derive(Serialize)]
+pub struct PostDownloadParams {
+    pub token: String,
+    /// receiver id
+    pub id: String,
+}
+
+/** ===================================== */
+
 pub struct RequestClient {
     url: Url,
 }
@@ -176,7 +186,7 @@ impl RequestClient {
                 let file = fs::File::open(path).await.expect("open file failed");
                 let metadata = file.metadata().await.expect("get metadata failed");
                 let total_size = metadata.len();
-                let mut reader = io::BufReader::new(file);
+                let mut reader = io::BufReader::with_capacity(1024 * 1024, file);
                 let (tx, rx) = mpsc::channel::<Result<Vec<u8>, reqwest::Error>>(5);
 
                 let progreebar = utils::handle::create_progress_bar(total_size, &filename);
@@ -206,6 +216,9 @@ impl RequestClient {
                     .body(Body::wrap_stream(
                         tokio_stream::wrappers::ReceiverStream::new(rx),
                     ))
+                    .header("Content-Length", total_size)
+                    .header("Content-Type", "video/mp4")
+                    .header("Connection", "keep-alive")
                     .send()
                     .await?;
             }
@@ -238,12 +251,11 @@ impl RequestClient {
     ) -> Result<GetMetadataResponse, reqwest::Error> {
         let mut url = self.url.clone();
         url.set_path("/metadata");
-        url.set_query(Some(
-            serde_qs::to_string(&GetMetadataParams { id: receiver_id })
-                .unwrap()
-                .as_str(),
-        ));
-        let result = Client::new().get(url).send().await?;
+        let result = Client::new()
+            .get(url)
+            .query(&GetMetadataParams { id: receiver_id })
+            .send()
+            .await?;
         Ok(result.json().await.unwrap())
     }
 
@@ -254,6 +266,28 @@ impl RequestClient {
         let mut url = self.url.clone();
         url.set_path("/metadata/select");
         let result = Client::new().post(url).json(payload).send().await?;
-        Ok(result.json().await.unwrap())
+
+        match result.error_for_status() {
+            Ok(res) => Ok(res.json().await.unwrap()),
+            Err(err) => Err(err),
+        }
+    }
+
+    pub async fn post_download(
+        &self,
+        token: String,
+        receiver_id: String,
+    ) -> Result<reqwest::Response, reqwest::Error> {
+        let mut url = self.url.clone();
+        url.set_path("/download");
+        Client::new()
+            .post(url)
+            .query(&PostDownloadParams {
+                id: receiver_id,
+                token,
+            })
+            .header("Connection", "keep-alive")
+            .send()
+            .await
     }
 }

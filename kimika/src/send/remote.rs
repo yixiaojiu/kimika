@@ -1,8 +1,9 @@
 use super::utils::{Content, ContentType};
 use super::SendArgs;
-use crate::request::remote as request_remote;
+use crate::request::{self, remote as request_remote};
 use crate::{config, utils::handle, utils::select};
 use crossterm::style::Stylize;
+use std::sync::Arc;
 use std::{fs, path::PathBuf};
 use tokio::{sync::mpsc, time};
 use uuid::Uuid;
@@ -44,22 +45,27 @@ pub async fn remote_send(
         return Ok(());
     };
 
-    let request = request_remote::RequestClient::new(&address);
+    let request = Arc::new(request_remote::RequestClient::new(&address));
 
     let (tx, mut rx) = mpsc::channel::<Vec<select::SelectItem<String>>>(1);
-
-    loop {
-        let res = request.get_receivers().await.expect("");
-        let receiver_iter = res.receivers.iter().map(|receiver| select::SelectItem {
-            id: receiver.id.clone(),
-            label: receiver.alias.clone(),
-        });
-        let result = tx.send(receiver_iter.collect()).await;
-        if result.is_err() {
-            break;
+    let request_clone = Arc::clone(&request);
+    tokio::spawn(async move {
+        loop {
+            if tx.is_closed() {
+                break;
+            }
+            let res = request_clone.get_receivers().await.expect("");
+            let receiver_iter = res.receivers.iter().map(|receiver| select::SelectItem {
+                id: receiver.id.clone(),
+                label: receiver.alias.clone(),
+            });
+            let result = tx.send(receiver_iter.collect()).await;
+            if result.is_err() {
+                break;
+            }
+            time::sleep(time::Duration::from_secs(2)).await;
         }
-        time::sleep(time::Duration::from_secs(1)).await;
-    }
+    });
 
     let selected_receiver_id = if let Some(id) = select::receiver_select(&mut rx)
         .await
@@ -69,6 +75,8 @@ pub async fn remote_send(
     } else {
         return Ok(());
     };
+    // close channel
+    drop(rx);
 
     let metadata_list: Vec<request_remote::Metadata> = content_list
         .iter()
@@ -102,7 +110,7 @@ pub async fn remote_send(
     let res = request
         .post_metadata(&request_remote::PostMetadataPayload {
             receiver_id: selected_receiver_id.clone(),
-            alias: args.alias.clone().unwrap(),
+            alias: config.alias.clone(),
             metadata: metadata_list,
         })
         .await

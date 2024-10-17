@@ -52,6 +52,11 @@ impl Server {
         match transfer_guard.receiver.take() {
             Some(receiver) => {
                 let res = Response::new(req_body.boxed());
+                res_body_tx
+                    .send(Ok(http_body::Frame::data(Bytes::from("ok"))))
+                    .await
+                    .unwrap();
+
                 receiver.res_sender.send(res).unwrap();
             }
             None => {

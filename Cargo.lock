@@ -997,6 +997,7 @@ name = "kimika"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "bytes",
  "clap",
  "crossterm",
  "dirs",
@@ -1006,7 +1007,6 @@ dependencies = [
  "kimika_shared",
  "reqwest",
  "serde",
- "serde_qs",
  "tokio",
  "tokio-stream",
  "tokio-util",

@@ -4,7 +4,7 @@ use crate::utils::types;
 
 use bytes::Bytes;
 use http_body_util::{combinators::BoxBody, BodyExt};
-use hyper::Response;
+use hyper::{header, Response};
 use serde::Deserialize;
 use tokio::sync::{oneshot, Mutex};
 
@@ -46,7 +46,16 @@ impl Server {
             oneshot::channel::<Response<BoxBody<Bytes, hyper::Error>>>();
 
         match transfer_guard.sender.take() {
-            Some(sender) => return Ok(Response::new(sender.req_body.boxed())),
+            Some(sender) => {
+                let res = Response::new(sender.req_body.boxed());
+                sender
+                    .res_body_tx
+                    .send(Ok(http_body::Frame::data(Bytes::from("ok"))))
+                    .await
+                    .unwrap();
+
+                return Ok(res);
+            }
             None => {
                 transfer_guard.receiver.replace(data::DataReceiver {
                     res_sender: res_body_tx,
