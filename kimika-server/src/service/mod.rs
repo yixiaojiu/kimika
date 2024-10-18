@@ -5,11 +5,14 @@ mod post_metadata;
 mod post_register;
 mod post_select_metadata;
 mod post_upload;
+pub mod transfer;
 
 use crate::data;
 use crate::utils::hyper_utils;
 use crate::utils::types;
 
+use bytes::Bytes;
+use http_body_util::combinators::BoxBody;
 use hyper::Response;
 use std::sync::Arc;
 use tklog::async_info;
@@ -43,7 +46,13 @@ impl Server {
         }
     }
 
-    pub async fn handle(self, req: types::RequestType) -> types::ResponseType {
+    pub async fn handle(
+        self,
+        req: types::RequestType,
+    ) -> Result<
+        Response<impl http_body::Body<Data = Bytes, Error = hyper::Error>>,
+        Box<dyn std::error::Error + Send + Sync>,
+    > {
         let method = req.method();
         let path = req.uri().path();
         async_info!(format!("[{}] [{}]", method, path));

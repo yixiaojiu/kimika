@@ -1,10 +1,10 @@
+use super::transfer::transfer;
 use super::Server;
 use crate::data;
 use crate::utils::types;
+use crate::utils::types::DataReceiverResponseBody;
 
-use bytes::Bytes;
-use http_body_util::{combinators::BoxBody, BodyExt};
-use hyper::{header, Response};
+use hyper::Response;
 use serde::Deserialize;
 use tokio::sync::{oneshot, Mutex};
 
@@ -42,19 +42,18 @@ impl Server {
 
         let mut transfer_guard = transfer_mutex.lock().await;
 
-        let (res_body_tx, res_body_rx) =
-            oneshot::channel::<Response<BoxBody<Bytes, hyper::Error>>>();
+        let (res_body_tx, res_body_rx) = oneshot::channel::<Response<types::BodyType>>();
 
         match transfer_guard.sender.take() {
             Some(sender) => {
-                let res = Response::new(sender.req_body.boxed());
-                sender
-                    .res_body_tx
-                    .send(Ok(http_body::Frame::data(Bytes::from("ok"))))
-                    .await
-                    .unwrap();
-
-                return Ok(res);
+                transfer(
+                    sender,
+                    data::DataReceiver {
+                        res_sender: res_body_tx,
+                    },
+                )
+                .await
+                .unwrap();
             }
             None => {
                 transfer_guard.receiver.replace(data::DataReceiver {
