@@ -8,27 +8,27 @@ mod udp;
 use crate::config;
 use clap::Args;
 
-/// receive file or message
+/// Receive file or message
 #[derive(Args, Debug)]
-#[command(version, about, long_about = None)]
+#[command(version, about, alias = "r", long_about = None)]
 pub struct ReceiveArgs {
-    /// listen port
+    /// Listen port
     #[arg(long, value_name = "port")]
     pub port: Option<u16>,
 
-    /// save folder
+    /// Save folder
     #[arg(short, long, value_name = "folder")]
     pub folder: Option<String>,
 
-    /// alias used for identification
+    /// Alias used for identification
     #[arg(long, value_name = "alias")]
     pub alias: Option<String>,
 
-    /// whether to use remote server
+    /// Whether to use remote server
     #[arg(short, long, value_name = "server", default_value = "false")]
     pub server: bool,
 
-    /// remote server address. Such as: example.com
+    /// Remote server address. Such as: example.com
     #[arg(short, long, value_name = "address")]
     pub address: Option<String>,
 }

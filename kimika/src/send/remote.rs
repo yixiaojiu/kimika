@@ -1,6 +1,6 @@
 use super::utils::{Content, ContentType};
 use super::SendArgs;
-use crate::request::{self, remote as request_remote};
+use crate::request::remote as request_remote;
 use crate::{config, utils::handle, utils::select};
 use crossterm::style::Stylize;
 use std::sync::Arc;

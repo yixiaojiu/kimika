@@ -9,7 +9,7 @@ mod utils;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(version, about, long_about = None, styles = utils::clap::clap_styles())]
+#[command(version, long_about = None, styles = utils::clap::clap_styles())]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

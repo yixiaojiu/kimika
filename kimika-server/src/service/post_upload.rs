@@ -1,13 +1,11 @@
 use super::transfer::transfer;
 use super::Server;
 use crate::data;
-use crate::utils::types;
+use crate::utils::{hyper_utils, types};
 
-use bytes::Bytes;
-use http_body_util::{BodyExt, StreamBody};
 use hyper::Response;
 use serde::Deserialize;
-use tokio::sync::mpsc;
+use tokio::sync::oneshot;
 use tokio::sync::Mutex;
 
 #[derive(Deserialize, Debug)]
@@ -48,11 +46,10 @@ impl Server {
 
         let mut transfer_guard = transfer_mutex.lock().await;
 
-        let (res_body_tx, res_body_rx) =
-            mpsc::channel::<Result<http_body::Frame<Bytes>, hyper::Error>>(1);
+        let (res_body_tx, res_body_rx) = oneshot::channel::<()>();
         match transfer_guard.receiver.take() {
             Some(receiver) => {
-                transfer(
+                if let Err(_e) = transfer(
                     data::DataSender {
                         req_body,
                         res_body_tx,
@@ -60,7 +57,9 @@ impl Server {
                     receiver,
                 )
                 .await
-                .unwrap();
+                {
+                    // TODO
+                }
             }
             None => {
                 transfer_guard.sender.replace(data::DataSender {
@@ -71,8 +70,9 @@ impl Server {
         }
         drop(transfer_guard);
         drop(transfer_mutex);
-        let body_stream =
-            StreamBody::new(tokio_stream::wrappers::ReceiverStream::new(res_body_rx)).boxed();
-        Ok(Response::new(body_stream))
+
+        // TODO: this will produce an error
+        let _receive_result = res_body_rx.await;
+        Ok(Response::new(hyper_utils::empty()))
     }
 }

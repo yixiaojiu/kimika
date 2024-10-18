@@ -1,12 +1,11 @@
 use crate::utils::types;
-use bytes::Bytes;
 use hyper::Response;
 use serde::Serialize;
 use tokio::sync::{mpsc, oneshot};
 
 pub struct DataSender {
     pub req_body: hyper::body::Incoming,
-    pub res_body_tx: mpsc::Sender<Result<http_body::Frame<Bytes>, hyper::Error>>,
+    pub res_body_tx: oneshot::Sender<()>,
 }
 
 pub struct DataReceiver {

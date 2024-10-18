@@ -8,35 +8,35 @@ use crate::config;
 use clap::Args;
 use crossterm::{style::Stylize, tty::IsTty};
 
-/// send file
+/// Send file or message
 #[derive(Args, Debug)]
-#[command(version, about, long_about = None)]
+#[command(version, alias = "s", long_about = None)]
 pub struct SendArgs {
-    /// the path of file which want to send
+    /// The path of file which want to send
     #[arg(short, long, value_name = "path")]
     pub path: Option<String>,
 
-    /// text which wants to send
+    /// Text which wants to send
     #[arg(short, long, value_name = "message")]
     pub message: Option<String>,
 
-    /// receiver address or remote server address. Such as: example.com
+    /// Receiver address or remote server address. Such as: example.com
     #[arg(short, long, value_name = "address")]
     pub address: Option<String>,
 
-    /// listen port
+    /// Listen port
     #[arg(long, value_name = "port")]
     pub port: Option<u16>,
 
-    /// receiver listening port when transfer from local network
+    /// Receiver listening port when transfer from local network
     #[arg(long, value_name = "receiver_port")]
     pub receiver_port: Option<u16>,
 
-    /// alias used for identification
+    /// Alias used for identification
     #[arg(long, value_name = "alias")]
     pub alias: Option<String>,
 
-    /// whether to use remote server
+    /// Whether to use remote server
     #[arg(short, long, value_name = "server", default_value = "false")]
     pub server: bool,
 }

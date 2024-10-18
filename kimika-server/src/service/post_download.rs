@@ -2,7 +2,6 @@ use super::transfer::transfer;
 use super::Server;
 use crate::data;
 use crate::utils::types;
-use crate::utils::types::DataReceiverResponseBody;
 
 use hyper::Response;
 use serde::Deserialize;

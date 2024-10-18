@@ -1,5 +1,4 @@
 use crate::data;
-use bytes::Bytes;
 use http_body_util::{combinators::BoxBody, BodyExt};
 use pin_project_lite::pin_project;
 use std::{
@@ -76,11 +75,9 @@ pub async fn transfer(
         res_body_tx: sender_res_body_tx,
     } = sender;
 
-    let (finish_notifier, finish_waiter) = tokio::sync::oneshot::channel::<()>();
-
     let body = FinishDetectableBody {
         body: req_body.boxed(),
-        finish_notifier: Some(finish_notifier),
+        finish_notifier: Some(sender_res_body_tx),
     };
 
     let body = BoxBody::new(body);
@@ -90,20 +87,6 @@ pub async fn transfer(
         .res_sender
         .send(res)
         .map_err(|e| TransferError::new(format!("Transfer error: {:?}", e.headers())))?;
-
-    tokio::spawn(async move {
-        match finish_waiter.await {
-            Err(e) => {
-                println!("Transfer error: {:?}", e);
-            }
-            Ok(_) => {}
-        };
-
-        sender_res_body_tx
-            .send(Ok(http_body::Frame::data(Bytes::from("ok"))))
-            .await
-            .unwrap();
-    });
 
     Ok(())
 }

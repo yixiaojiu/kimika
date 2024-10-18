@@ -1,6 +1,5 @@
 use crate::send::utils::{Content, ContentType};
 use crate::utils;
-use bytes::Bytes;
 use reqwest::{Body, Client, Url};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
@@ -168,7 +167,7 @@ impl RequestClient {
         &self,
         content: &Content,
         payload: PostUploadParams,
-    ) -> Result<(), reqwest::Error> {
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let mut url = self.url.clone();
         url.set_path("/upload");
 
@@ -183,11 +182,11 @@ impl RequestClient {
                     .to_str()
                     .unwrap()
                     .to_string();
-                let file = fs::File::open(path).await.expect("open file failed");
-                let metadata = file.metadata().await.expect("get metadata failed");
+                let file = fs::File::open(path).await?;
+                let metadata = file.metadata().await?;
                 let total_size = metadata.len();
                 let mut reader = io::BufReader::with_capacity(1024 * 1024, file);
-                let (tx, rx) = mpsc::channel::<Result<Vec<u8>, reqwest::Error>>(5);
+                let (tx, rx) = mpsc::channel::<Result<Vec<u8>, reqwest::Error>>(3);
 
                 let progreebar = utils::handle::create_progress_bar(total_size, &filename);
 
@@ -217,8 +216,6 @@ impl RequestClient {
                         tokio_stream::wrappers::ReceiverStream::new(rx),
                     ))
                     .header("Content-Length", total_size)
-                    .header("Content-Type", "video/mp4")
-                    .header("Connection", "keep-alive")
                     .send()
                     .await?;
             }

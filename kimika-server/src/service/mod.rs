@@ -12,7 +12,6 @@ use crate::utils::hyper_utils;
 use crate::utils::types;
 
 use bytes::Bytes;
-use http_body_util::combinators::BoxBody;
 use hyper::Response;
 use std::sync::Arc;
 use tklog::async_info;
