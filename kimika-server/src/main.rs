@@ -10,6 +10,7 @@ use hyper_util::rt::TokioIo;
 use std::net::SocketAddr;
 use tklog::{async_error, ASYNC_LOG, LEVEL, MODE};
 use tokio::net::TcpListener;
+use tokio::time;
 
 async fn async_log_init() {
     ASYNC_LOG
@@ -29,6 +30,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind(addr).await?;
 
     let server = service::Server::new();
+    let server_clone = server.clone();
+
+    tokio::spawn(async move {
+        const DURATION_TIME: u64 = 60 * 60;
+
+        loop {
+            time::sleep(time::Duration::from_secs(DURATION_TIME)).await;
+            server_clone.clone().clear_state().await;
+        }
+    });
 
     let server_service = service_fn(move |req| server.clone().handle(req));
 

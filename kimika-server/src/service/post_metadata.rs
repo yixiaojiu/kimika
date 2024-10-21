@@ -7,6 +7,7 @@ use bytes::{Buf, Bytes};
 use http_body_util::BodyExt;
 use hyper::Response;
 use serde::{Deserialize, Serialize};
+use std::time;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
@@ -47,9 +48,17 @@ impl Server {
         let body = req.collect().await?.aggregate();
         let payload: Payload = serde_json::from_reader(body.reader())?;
 
+        let receiver_guard = self.receiver.lock().await;
+        if receiver_guard.contains_key(&payload.receiver_id) {
+            receiver_guard.remove(&payload.receiver_id);
+        } else {
+            return Ok(hyper_utils::rejection_response("Cannot find receiver"));
+        }
+        drop(receiver_guard);
+
         let receiver_id = payload.receiver_id;
         let metadata_guard = self.metadata.lock().await;
-        let uuid = Uuid::new_v4().to_string();
+        let sender_id = Uuid::new_v4().to_string();
         let (tx, mut rx) = mpsc::channel(1);
         let metadatas = payload
             .metadata
@@ -61,6 +70,7 @@ impl Server {
                 file_name: v.file_name.clone(),
                 file_type: v.file_type.clone(),
                 size: v.size.clone(),
+                completed: false,
             })
             .collect::<Vec<data::MetadataItem>>();
 
@@ -68,12 +78,13 @@ impl Server {
             receiver_id.clone(),
             data::Metadata {
                 sender: data::Sender {
-                    id: uuid.clone(),
+                    id: sender_id.clone(),
                     alias: payload.alias,
                 },
                 receiver_id: receiver_id.clone(),
                 metadata_list: metadatas,
                 selected_metadata_tx: tx,
+                created: time::Instant::now(),
             },
         );
 
@@ -103,7 +114,7 @@ impl Server {
 
         let body = hyper_utils::full(Bytes::from(
             serde_json::to_string(&ResponseBody {
-                id: uuid,
+                id: sender_id,
                 selected_metadata_list,
                 message: String::from("ok"),
             })

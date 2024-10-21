@@ -11,10 +11,9 @@ use crate::data;
 use crate::utils::hyper_utils;
 use crate::utils::types;
 
-use bytes::Bytes;
 use hyper::Response;
 use std::sync::Arc;
-use tklog::async_info;
+use tklog::{async_error, async_info};
 use tokio::sync::Mutex;
 
 pub struct Server {
@@ -45,18 +44,13 @@ impl Server {
         }
     }
 
-    pub async fn handle(
-        self,
-        req: types::RequestType,
-    ) -> Result<
-        Response<impl http_body::Body<Data = Bytes, Error = hyper::Error>>,
-        Box<dyn std::error::Error + Send + Sync>,
-    > {
+    pub async fn handle(self, req: types::RequestType) -> types::ResponseType {
         let method = req.method();
         let path = req.uri().path();
-        async_info!(format!("[{}] [{}]", method, path));
+        let log_flag = format!("[{}] [{}]", method, path);
+        async_info!(log_flag);
 
-        match (method, path) {
+        let res = match (method, path) {
             (&hyper::Method::POST, "/register") => self.post_register(req).await,
             (&hyper::Method::POST, "/upload") => self.post_upload(req).await,
             (&hyper::Method::POST, "/download") => self.post_download(req).await,
@@ -69,6 +63,18 @@ impl Server {
                 *res.status_mut() = hyper::StatusCode::NOT_FOUND;
                 Ok(res)
             }
+        };
+
+        if let Err(e) = res {
+            let error_message = e.to_string();
+            async_error!(format!("{} {}", log_flag, error_message));
+            return Ok(hyper_utils::rejection_response(error_message));
         }
+
+        res
+    }
+
+    pub async fn clear_state(self) {
+
     }
 }

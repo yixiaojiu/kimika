@@ -25,16 +25,21 @@ impl Server {
         let params: Params = serde_qs::from_str(query)?;
 
         let metadata_guard = self.metadata.lock().await;
-        // TODO none hander
         let metadata_entry = metadata_guard.get(&params.receiver);
-        // TODO check
         if let Some(ref metadata) = metadata_entry {
             let sender_check = metadata.sender.id == params.id;
             let metadata_check = metadata
                 .metadata_list
                 .iter()
                 .any(|v| v.token == params.token);
+
+            if !sender_check || !metadata_check {
+                return Ok(hyper_utils::rejection_response("Metadata check failed"));
+            }
         } else {
+            return Ok(hyper_utils::rejection_response(
+                "Cannot find metadata from receiver id",
+            ));
         }
         drop(metadata_entry);
         drop(metadata_guard);
@@ -49,7 +54,7 @@ impl Server {
         let (res_body_tx, res_body_rx) = oneshot::channel::<()>();
         match transfer_guard.receiver.take() {
             Some(receiver) => {
-                if let Err(_e) = transfer(
+                if let Err(e) = transfer(
                     data::DataSender {
                         req_body,
                         res_body_tx,
@@ -58,7 +63,7 @@ impl Server {
                 )
                 .await
                 {
-                    // TODO
+                    eprintln!("Error: {}", e);
                 }
             }
             None => {
@@ -73,6 +78,31 @@ impl Server {
 
         // TODO: this will produce an error
         let _receive_result = res_body_rx.await;
+
+        // clear server state
+        self.transfer.remove(&params.token);
+        self.handle_metadata_state(&params.receiver, &params.token)
+            .await;
+
         Ok(Response::new(hyper_utils::empty()))
+    }
+
+    /// update metadata state
+    pub async fn handle_metadata_state(self, receiver_id: &String, token: &String) {
+        let metadata_guard = self.metadata.lock().await;
+        let mut metadata_entry = metadata_guard.get_mut(receiver_id).unwrap();
+        metadata_entry.metadata_list.iter_mut().for_each(|v| {
+            if v.token.eq(token) {
+                v.completed = true
+            }
+        });
+
+        let all_completed = metadata_entry.metadata_list.iter().all(|v| v.completed);
+
+        // drop reference of dashmap. If not, `metadata_guard.remove` will deadlock
+        drop(metadata_entry);
+        if all_completed {
+            metadata_guard.remove(receiver_id);
+        }
     }
 }

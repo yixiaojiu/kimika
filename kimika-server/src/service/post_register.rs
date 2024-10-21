@@ -7,6 +7,7 @@ use bytes::{Buf, Bytes};
 use http_body_util::BodyExt;
 use hyper::Response;
 use serde::{Deserialize, Serialize};
+use std::time;
 use uuid::Uuid;
 
 #[derive(Deserialize, Debug)]
@@ -32,6 +33,7 @@ impl Server {
         let receiver = data::Receiver {
             id: uuid.clone(),
             alias: payload.alias.clone(),
+            created: time::Instant::now(),
         };
 
         let receiver_guard = self.receiver.lock().await;

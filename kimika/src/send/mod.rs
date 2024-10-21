@@ -10,7 +10,7 @@ use crossterm::{style::Stylize, tty::IsTty};
 
 /// Send file or message
 #[derive(Args, Debug)]
-#[command(version, alias = "s", long_about = None)]
+#[command(version, long_about = None)]
 pub struct SendArgs {
     /// The path of file which want to send
     #[arg(short, long, value_name = "path")]

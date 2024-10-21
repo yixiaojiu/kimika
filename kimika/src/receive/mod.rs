@@ -10,7 +10,7 @@ use clap::Args;
 
 /// Receive file or message
 #[derive(Args, Debug)]
-#[command(version, about, alias = "r", long_about = None)]
+#[command(version, about, alias = "recv", long_about = None)]
 pub struct ReceiveArgs {
     /// Listen port
     #[arg(long, value_name = "port")]

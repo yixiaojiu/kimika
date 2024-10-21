@@ -1,6 +1,8 @@
 use crate::utils::types;
+
 use hyper::Response;
 use serde::Serialize;
+use std::time;
 use tokio::sync::{mpsc, oneshot};
 
 pub struct DataSender {
@@ -15,6 +17,7 @@ pub struct DataReceiver {
 pub struct Transfer {
     pub sender: Option<DataSender>,
     pub receiver: Option<DataReceiver>,
+    pub created: time::Instant,
 }
 
 #[derive(Clone, Serialize)]
@@ -26,6 +29,8 @@ pub struct MetadataItem {
     pub file_name: Option<String>,
     pub file_type: Option<String>,
     pub size: Option<u64>,
+    /// whether completed
+    pub completed: bool,
 }
 
 pub struct Sender {
@@ -39,12 +44,13 @@ pub struct Metadata {
     pub receiver_id: String,
     pub metadata_list: Vec<MetadataItem>,
     pub selected_metadata_tx: mpsc::Sender<Vec<String>>,
+    pub created: time::Instant,
 }
 
-#[derive(Clone, Serialize)]
 pub struct Receiver {
     pub id: String,
     pub alias: String,
+    pub created: time::Instant,
 }
 
 impl Transfer {
@@ -52,6 +58,7 @@ impl Transfer {
         Self {
             sender: None,
             receiver: None,
+            created: time::Instant::now(),
         }
     }
 }

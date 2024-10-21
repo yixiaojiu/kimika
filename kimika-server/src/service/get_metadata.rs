@@ -1,5 +1,4 @@
 use super::Server;
-use crate::data;
 use crate::utils::hyper_utils;
 use crate::utils::types;
 
@@ -13,9 +12,20 @@ struct Params {
     id: String,
 }
 
+#[derive(Clone, Serialize)]
+pub struct MetadataItem {
+    pub id: String,
+    pub token: String,
+    /// file or message
+    pub metadata_type: String,
+    pub file_name: Option<String>,
+    pub file_type: Option<String>,
+    pub size: Option<u64>,
+}
+
 #[derive(Serialize)]
 struct ResponseBody {
-    metadatas: Vec<data::MetadataItem>,
+    metadatas: Vec<MetadataItem>,
     message: String,
 }
 
@@ -29,10 +39,21 @@ impl Server {
         let metadata_entry = metadata_guard.get(&params.id);
 
         if let Some(metadata) = metadata_entry {
-            let metadatas = metadata.metadata_list.clone();
+            let metadatas = metadata
+                .metadata_list
+                .iter()
+                .map(|v| MetadataItem {
+                    id: v.id.clone(),
+                    token: v.token.clone(),
+                    metadata_type: v.metadata_type.clone(),
+                    file_name: v.file_name.clone(),
+                    file_type: v.file_type.clone(),
+                    size: v.size.clone(),
+                })
+                .collect();
             let body = hyper_utils::full(Bytes::from(
                 serde_json::to_string(&ResponseBody {
-                    metadatas: metadatas,
+                    metadatas,
                     message: String::from("ok"),
                 })
                 .unwrap(),

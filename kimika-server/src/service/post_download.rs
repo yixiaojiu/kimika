@@ -1,7 +1,7 @@
 use super::transfer::transfer;
 use super::Server;
 use crate::data;
-use crate::utils::types;
+use crate::utils::{hyper_utils, types};
 
 use hyper::Response;
 use serde::Deserialize;
@@ -21,15 +21,19 @@ impl Server {
         let params: Params = serde_qs::from_str(query)?;
 
         let metadata_guard = self.metadata.lock().await;
-        // TODO none hander
         let metadata_entry = metadata_guard.get(&params.id);
-        // TODO check
         if let Some(ref metadata) = metadata_entry {
             let metadata_check = metadata
                 .metadata_list
                 .iter()
                 .any(|v| v.token == params.token);
+            if !metadata_check {
+                return Ok(hyper_utils::rejection_response("Metadata check failed"));
+            }
         } else {
+            return Ok(hyper_utils::rejection_response(
+                "Cannot find metadata from receiver id",
+            ));
         }
         drop(metadata_entry);
         drop(metadata_guard);
@@ -62,6 +66,12 @@ impl Server {
         }
         drop(transfer_guard);
         drop(transfer_mutex);
-        Ok(res_body_rx.await.unwrap())
+
+        let res = res_body_rx.await?;
+
+        // clear server state
+        self.transfer.remove(&params.token);
+
+        Ok(res)
     }
 }
