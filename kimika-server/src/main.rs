@@ -33,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server_clone = server.clone();
 
     tokio::spawn(async move {
-        const DURATION_TIME: u64 = 60 * 60;
+        const DURATION_TIME: u64 = 2 * 60;
 
         loop {
             time::sleep(time::Duration::from_secs(DURATION_TIME)).await;

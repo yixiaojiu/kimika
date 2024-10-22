@@ -3,7 +3,7 @@ use crate::utils::types;
 use hyper::Response;
 use serde::Serialize;
 use std::time;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::oneshot;
 
 pub struct DataSender {
     pub req_body: hyper::body::Incoming,
@@ -17,10 +17,9 @@ pub struct DataReceiver {
 pub struct Transfer {
     pub sender: Option<DataSender>,
     pub receiver: Option<DataReceiver>,
-    pub created: time::Instant,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct MetadataItem {
     pub id: String,
     pub token: String,
@@ -33,23 +32,32 @@ pub struct MetadataItem {
     pub completed: bool,
 }
 
+#[derive(Debug)]
 pub struct Sender {
     pub alias: String,
     pub id: String,
 }
 
+#[derive(Debug)]
 pub struct Metadata {
     /// sender alias
     pub sender: Sender,
     pub receiver_id: String,
     pub metadata_list: Vec<MetadataItem>,
-    pub selected_metadata_tx: mpsc::Sender<Vec<String>>,
+    pub selected_metadata_tx: Option<oneshot::Sender<Vec<String>>>,
     pub created: time::Instant,
 }
 
+#[derive(Debug)]
 pub struct Receiver {
     pub id: String,
     pub alias: String,
+
+    /// Unique identifier from client, such as: mac address
+    ///
+    /// Preventing duplicate insertion
+    pub identifier: Option<String>,
+
     pub created: time::Instant,
 }
 
@@ -58,7 +66,6 @@ impl Transfer {
         Self {
             sender: None,
             receiver: None,
-            created: time::Instant::now(),
         }
     }
 }

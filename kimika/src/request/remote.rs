@@ -85,12 +85,12 @@ pub struct PostUploadParams {
 #[derive(Serialize)]
 pub struct PostRegisterPayload {
     alias: String,
+    identifier: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct PostRegisterResponse {
     pub id: String,
-    pub message: String,
 }
 
 /** ===================================== */
@@ -104,7 +104,6 @@ pub struct GetMetadataParams {
 #[derive(Deserialize)]
 pub struct GetMetadataResponse {
     pub metadatas: Vec<MetadataItem>,
-    pub message: String,
 }
 
 /** ===================================== */
@@ -115,11 +114,6 @@ pub struct PostSelectMetadataPayload {
     pub id: String,
     /// metadata unique token
     pub selected_tokens: Vec<String>,
-}
-
-#[derive(Deserialize)]
-pub struct PostSelectMetadataResponse {
-    pub message: String,
 }
 
 /** ===================================== */
@@ -230,13 +224,14 @@ impl RequestClient {
     pub async fn post_register(
         &self,
         alias: String,
+        identifier: Option<String>,
     ) -> Result<PostRegisterResponse, reqwest::Error> {
         let mut url = self.url.clone();
         url.set_path("/register");
 
         let result = Client::new()
             .post(url)
-            .json(&PostRegisterPayload { alias })
+            .json(&PostRegisterPayload { alias, identifier })
             .send()
             .await?;
         Ok(result.json().await.unwrap())
@@ -259,13 +254,13 @@ impl RequestClient {
     pub async fn post_select_metadata(
         &self,
         payload: &PostSelectMetadataPayload,
-    ) -> Result<PostSelectMetadataResponse, reqwest::Error> {
+    ) -> Result<(), reqwest::Error> {
         let mut url = self.url.clone();
         url.set_path("/metadata/select");
         let result = Client::new().post(url).json(payload).send().await?;
 
         match result.error_for_status() {
-            Ok(res) => Ok(res.json().await.unwrap()),
+            Ok(_) => Ok(()),
             Err(err) => Err(err),
         }
     }

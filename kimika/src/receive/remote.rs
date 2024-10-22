@@ -2,6 +2,7 @@ use super::ReceiveArgs;
 use crate::request::remote as request_remote;
 use crate::utils;
 use crate::{config, utils::handle};
+
 use crossterm::style::Stylize;
 use std::path::PathBuf;
 use tokio::io::{AsyncWriteExt, BufWriter};
@@ -21,7 +22,12 @@ pub async fn remote_receive(
 
     let request = request_remote::RequestClient::new(&address);
 
-    let receiver_id = request.post_register(config.alias.clone()).await?.id;
+    let mac_address = utils::handle::get_mac_address();
+
+    let receiver_id = request
+        .post_register(config.alias.clone(), mac_address)
+        .await?
+        .id;
 
     let mut metadatas = Vec::new();
     loop {

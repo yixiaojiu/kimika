@@ -39,3 +39,11 @@ pub fn handle_message(args: &SendArgs) -> Option<String> {
         try_read_from_pipeline()
     }
 }
+
+pub fn get_mac_address() -> Option<String> {
+    if let Ok(Some(ma)) = mac_address::get_mac_address() {
+        Some(ma.to_string())
+    } else {
+        None
+    }
+}

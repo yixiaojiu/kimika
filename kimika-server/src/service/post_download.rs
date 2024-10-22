@@ -49,14 +49,16 @@ impl Server {
 
         match transfer_guard.sender.take() {
             Some(sender) => {
-                transfer(
+                if let Err(e) = transfer(
                     sender,
                     data::DataReceiver {
                         res_sender: res_body_tx,
                     },
                 )
                 .await
-                .unwrap();
+                {
+                    eprintln!("Error: {}", e);
+                };
             }
             None => {
                 transfer_guard.receiver.replace(data::DataReceiver {

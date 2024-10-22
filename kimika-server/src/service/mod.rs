@@ -25,6 +25,8 @@ pub struct Server {
     transfer: Arc<dashmap::DashMap<String, Mutex<data::Transfer>>>,
 }
 
+const EXPIRE_TIME: u64 = 60 * 10;
+
 impl Clone for Server {
     fn clone(&self) -> Self {
         Self {
@@ -75,6 +77,34 @@ impl Server {
     }
 
     pub async fn clear_state(self) {
+        async_info!("clear state start");
 
+        let mut clear_receiver_count = 0;
+        let receiver_guard = self.receiver.lock().await;
+        receiver_guard.retain(|_, v| {
+            let result = v.created.elapsed().as_secs() < EXPIRE_TIME;
+            if !result {
+                clear_receiver_count += 1;
+            }
+            result
+        });
+        drop(receiver_guard);
+
+        let mut clear_metadata_count = 0;
+        let metadata_guard = self.metadata.lock().await;
+        metadata_guard.retain(|_, v| {
+            let result = v.created.elapsed().as_secs() < EXPIRE_TIME;
+            if !result {
+                clear_metadata_count += 1;
+            }
+            result
+        });
+        drop(metadata_guard);
+
+        async_info!("clear state end");
+        async_info!(format!(
+            "clear receiver count: {}, clear metadata count: {}",
+            clear_receiver_count, clear_metadata_count
+        ));
     }
 }

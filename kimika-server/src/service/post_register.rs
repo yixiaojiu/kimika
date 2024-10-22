@@ -13,13 +13,13 @@ use uuid::Uuid;
 #[derive(Deserialize, Debug)]
 struct Payload {
     alias: String,
+    identifier: Option<String>,
 }
 
 #[derive(Serialize)]
 struct ResponseBody {
     /// receiver id
     id: String,
-    message: String,
 }
 
 impl Server {
@@ -28,24 +28,33 @@ impl Server {
         let body = req.collect().await?.aggregate();
         let payload: Payload = serde_json::from_reader(body.reader())?;
 
+        let receiver_guard = self.receiver.lock().await;
+
+        let mut receiver_item = receiver_guard
+            .iter()
+            .find(|item| item.identifier.eq(&payload.identifier));
+
         let uuid = Uuid::new_v4().to_string();
 
-        let receiver = data::Receiver {
-            id: uuid.clone(),
-            alias: payload.alias.clone(),
-            created: time::Instant::now(),
+        let id = if let Some(receiver) = receiver_item.take() {
+            receiver.value().id.clone()
+        } else {
+            let receiver = data::Receiver {
+                id: uuid.clone(),
+                alias: payload.alias,
+                identifier: payload.identifier,
+                created: time::Instant::now(),
+            };
+
+            receiver_guard.insert(uuid.clone(), receiver);
+            uuid
         };
 
-        let receiver_guard = self.receiver.lock().await;
-        receiver_guard.insert(uuid.clone(), receiver);
+        drop(receiver_item);
         drop(receiver_guard);
 
         let body = hyper_utils::full(Bytes::from(
-            serde_json::to_string(&ResponseBody {
-                id: uuid,
-                message: String::from("ok"),
-            })
-            .unwrap(),
+            serde_json::to_string(&ResponseBody { id }).unwrap(),
         ));
 
         let res = Response::new(body);

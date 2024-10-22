@@ -1,7 +1,6 @@
 mod local;
 mod local_grpc;
 mod remote;
-mod remote_bark;
 mod remote_grpc;
 mod udp;
 

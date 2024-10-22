@@ -1,14 +1,13 @@
 use super::Server;
 use crate::data;
-use crate::utils::hyper_utils;
-use crate::utils::types;
+use crate::utils::{hyper_utils, types};
 
 use bytes::{Buf, Bytes};
 use http_body_util::BodyExt;
 use hyper::Response;
 use serde::{Deserialize, Serialize};
 use std::time;
-use tokio::sync::mpsc;
+use tokio::sync::oneshot;
 use uuid::Uuid;
 
 #[derive(Deserialize, Debug)]
@@ -59,7 +58,7 @@ impl Server {
         let receiver_id = payload.receiver_id;
         let metadata_guard = self.metadata.lock().await;
         let sender_id = Uuid::new_v4().to_string();
-        let (tx, mut rx) = mpsc::channel(1);
+        let (tx, rx) = oneshot::channel();
         let metadatas = payload
             .metadata
             .iter()
@@ -83,7 +82,7 @@ impl Server {
                 },
                 receiver_id: receiver_id.clone(),
                 metadata_list: metadatas,
-                selected_metadata_tx: tx,
+                selected_metadata_tx: Some(tx),
                 created: time::Instant::now(),
             },
         );
@@ -91,24 +90,27 @@ impl Server {
         drop(metadata_guard);
 
         // TODO none handle
-        let selected_metadata_tokens = rx.recv().await.unwrap();
-        let mut selected_metadata_list = Vec::new();
+        let selected_metadata_tokens = rx.await.unwrap();
+
         let metadata_guard = self.metadata.lock().await;
-        if let Some(mut metadata) = metadata_guard.get_mut(&receiver_id) {
-            metadata
-                .metadata_list
-                .retain(|v| selected_metadata_tokens.contains(&v.token));
-            selected_metadata_list = metadata
-                .metadata_list
-                .iter()
-                .map(|v| ResponseMetadata {
-                    id: v.id.clone(),
-                    token: v.token.clone(),
-                })
-                .collect();
-        } else {
-            // TODO none handle
-        }
+        let selected_metadata_list =
+            if let Some(mut metadata) = metadata_guard.get_mut(&receiver_id) {
+                metadata
+                    .metadata_list
+                    .retain(|v| selected_metadata_tokens.contains(&v.token));
+                metadata
+                    .metadata_list
+                    .iter()
+                    .map(|v| ResponseMetadata {
+                        id: v.id.clone(),
+                        token: v.token.clone(),
+                    })
+                    .collect()
+            } else {
+                return Ok(hyper_utils::rejection_response(
+                    "Cannot find metadata from receiver id",
+                ));
+            };
 
         drop(metadata_guard);
 

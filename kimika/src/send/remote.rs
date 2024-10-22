@@ -54,7 +54,7 @@ pub async fn remote_send(
             if tx.is_closed() {
                 break;
             }
-            let res = request_clone.get_receivers().await.expect("");
+            let res = request_clone.get_receivers().await.unwrap();
             let receiver_iter = res.receivers.iter().map(|receiver| select::SelectItem {
                 id: receiver.id.clone(),
                 label: receiver.alias.clone(),
