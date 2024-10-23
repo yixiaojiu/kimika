@@ -79,7 +79,7 @@ impl Server {
     pub async fn clear_state(self) {
         async_info!("clear state start");
 
-        let mut clear_receiver_count = 0;
+        let mut clear_receiver_count: u32 = 0;
         let receiver_guard = self.receiver.lock().await;
         receiver_guard.retain(|_, v| {
             let result = v.created.elapsed().as_secs() < EXPIRE_TIME;
@@ -90,7 +90,7 @@ impl Server {
         });
         drop(receiver_guard);
 
-        let mut clear_metadata_count = 0;
+        let mut clear_metadata_count: u32 = 0;
         let metadata_guard = self.metadata.lock().await;
         metadata_guard.retain(|_, v| {
             let result = v.created.elapsed().as_secs() < EXPIRE_TIME;

@@ -4,7 +4,7 @@ mod config;
 mod receive;
 mod request;
 mod send;
-mod utils;
+pub mod utils;
 
 use clap::{Parser, Subcommand};
 
@@ -19,6 +19,7 @@ struct Cli {
 enum Commands {
     Send(send::SendArgs),
     Receive(receive::ReceiveArgs),
+    // Test,
 }
 
 #[tokio::main]
@@ -29,6 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         Commands::Send(args) => send::send(args, &mut config).await?,
         Commands::Receive(args) => receive::receive(args, &mut config).await?,
+        // Commands::Test => utils::multiselect::metadata_select().await?,
     }
 
     Ok(())

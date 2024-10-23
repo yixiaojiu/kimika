@@ -310,23 +310,39 @@ where
     }
 }
 
-pub async fn receiver_select(
-    rx: &mut mpsc::Receiver<Vec<SelectItem<String>>>,
-) -> Result<Option<String>, io::Error> {
-    // let
-    println!("{} Select a receiver >>", "?".green());
-    let mut select = Select::new(Vec::new(), std::io::stdout(), Some("Searching receiver..."));
-    let select_item = select.start_rx(rx).await?;
-    if select_item.is_none() {
-        return Ok(None);
-    }
-    let select_item = select_item.unwrap();
+pub async fn metadata_select() -> Result<(), Box<dyn std::error::Error>> {
+    println!("======================");
 
-    utils::crossterm::clear_up_lines(1u16)?;
-    println!(
-        "{} Select a receiver >> {}",
-        "?".green(),
-        select_item.label.clone().cyan()
-    );
-    Ok(Some(select_item.id.clone()))
+    let options = vec![utils::select::SelectItem {
+        id: "1000000".to_string(),
+        label: "1000000".to_string(),
+    }];
+
+    let mut select = utils::select::Select::new(options, io::stderr(), None);
+    let (tx, mut rx) = tokio::sync::mpsc::channel(1);
+
+    tokio::spawn(async move {
+        let mut num = 1000000;
+
+        let mut options = vec![];
+
+        for _ in 1..5 {
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            num += 1000000;
+            options.push(utils::select::SelectItem {
+                id: num.to_string(),
+                label: num.to_string(),
+            });
+
+            tx.send(options.clone()).await.unwrap();
+        }
+    });
+
+    if let Some(select) = select.start_rx(&mut rx).await? {
+        println!("{}", select.label)
+    } else {
+        println!("none")
+    }
+
+    Ok(())
 }
