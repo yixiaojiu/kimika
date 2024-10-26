@@ -4,6 +4,7 @@ mod config;
 mod receive;
 mod request;
 mod send;
+mod server;
 pub mod utils;
 
 use clap::{Parser, Subcommand};

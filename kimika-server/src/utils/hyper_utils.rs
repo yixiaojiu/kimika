@@ -4,10 +4,6 @@ use bytes::Bytes;
 use http_body_util::{combinators::BoxBody, BodyExt, Empty, Full};
 use hyper::Response;
 
-pub struct BadRequestResponse {
-    message: &'static str,
-}
-
 pub fn empty() -> BoxBody<Bytes, hyper::Error> {
     Empty::<Bytes>::new()
         .map_err(|never| match never {})
