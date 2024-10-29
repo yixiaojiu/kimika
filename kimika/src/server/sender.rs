@@ -2,22 +2,23 @@ use super::{full, ResponseType};
 
 use bytes::Buf;
 use http_body_util::BodyExt;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{body, Request, Response};
 use hyper_util::rt::TokioIo;
 
-#[derive(Deserialize)]
-struct Payload {
+#[derive(Deserialize, Serialize)]
+pub struct Payload {
     pub alias: String,
     pub port: u16,
 }
 
+#[derive(Debug, Clone)]
 pub struct Receiver {
     pub address: SocketAddr,
     pub alias: String,
@@ -57,32 +58,36 @@ async fn handle(
 pub async fn start_server(
     port: u16,
     tx: mpsc::Sender<Receiver>,
+    mut close_rx: oneshot::Receiver<()>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let addr: SocketAddr = ([0, 0, 0, 0], port).into();
     let listener = TcpListener::bind(addr).await?;
 
-    let check_tx = tx.clone();
     loop {
-        if check_tx.is_closed() {
-            break;
-        }
-        let (tcp, address) = listener.accept().await?;
-
-        let tx_clone = tx.clone();
-        tokio::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(
-                    TokioIo::new(tcp),
-                    service_fn(|req| {
-                        let receiver_tx = tx_clone.clone();
-                        handle(req, address, receiver_tx)
-                    }),
-                )
-                .await
-            {
-                println!("Error: {}", err);
+        tokio::select! {
+            _ = &mut close_rx => {
+                break;
             }
-        });
+            tcp_icoming = listener.accept() => {
+                let (tcp, address) = tcp_icoming?;
+                let tx_clone = tx.clone();
+                tokio::spawn(async move {
+                    if let Err(err) = http1::Builder::new()
+                        .serve_connection(
+                            TokioIo::new(tcp),
+                            service_fn(|req| {
+                                let receiver_tx = tx_clone.clone();
+                                handle(req, address, receiver_tx)
+                            }),
+                        )
+                        .await
+                    {
+                        println!("Error: {}", err);
+                    }
+                });
+                continue;
+            }
+        }
     }
 
     Ok(())

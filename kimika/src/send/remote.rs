@@ -67,11 +67,11 @@ pub async fn remote_send(
         }
     });
 
-    let selected_receiver_id = if let Some(id) = select::receiver_select(&mut rx)
+    let selected_receiver_id = if let Some(selected_item) = select::receiver_select(&mut rx)
         .await
         .expect("select receiver failed")
     {
-        id
+        selected_item.id
     } else {
         return Ok(());
     };

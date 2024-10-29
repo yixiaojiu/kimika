@@ -1,7 +1,5 @@
 mod local;
-mod local_grpc;
 mod remote;
-mod remote_grpc;
 mod udp;
 
 use crate::config;

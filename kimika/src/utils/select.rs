@@ -10,8 +10,11 @@ use crossterm::{
     style::Stylize,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use std::{fmt::Display, io::Write};
 use std::{fmt::Formatter, io};
+use std::{
+    fmt::{Debug, Display},
+    io::Write,
+};
 use tokio::{select, sync::mpsc};
 use tokio_stream::StreamExt;
 
@@ -103,7 +106,7 @@ pub struct SelectItem<I: ToString + Display> {
 pub struct Select<I, W>
 where
     I: ToString + Display,
-    W: Write, // W: std::io::Write, // F: Fn(SelectDialogKey, &I),
+    W: Write,
 {
     items: Vec<SelectItem<I>>,
     lines: Vec<Line>,
@@ -312,21 +315,21 @@ where
 
 pub async fn receiver_select(
     rx: &mut mpsc::Receiver<Vec<SelectItem<String>>>,
-) -> Result<Option<String>, io::Error> {
-    // let
+) -> Result<Option<SelectItem<String>>, io::Error> {
     println!("{} Select a receiver >>", "?".green());
-    let mut select = Select::new(Vec::new(), std::io::stdout(), Some("Searching receiver..."));
+    let mut select = Select::new(Vec::new(), std::io::stderr(), Some("Searching receiver..."));
     let select_item = select.start_rx(rx).await?;
-    if select_item.is_none() {
-        return Ok(None);
-    }
-    let select_item = select_item.unwrap();
 
-    utils::crossterm::clear_up_lines(1u16)?;
-    println!(
-        "{} Select a receiver >> {}",
-        "?".green(),
-        select_item.label.clone().cyan()
-    );
-    Ok(Some(select_item.id.clone()))
+    match select_item {
+        Some(select_item) => {
+            utils::crossterm::clear_up_lines(1u16)?;
+            println!(
+                "{} Select a receiver >> {}",
+                "?".green(),
+                select_item.label.clone().cyan()
+            );
+            Ok(Some(select_item.clone()))
+        }
+        None => Ok(None),
+    }
 }
