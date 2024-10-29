@@ -1,4 +1,4 @@
 [workspace]
 
-members = ["kimika", "kimika-server", "kimika_grpc", "kimika_shared"] 
+members = ["kimika", "kimika-server"] 
 resolver = "2"
