@@ -60,11 +60,10 @@ impl Server {
             (&hyper::Method::POST, "/metadata") => self.post_metadata(req).await,
             (&hyper::Method::GET, "/metadata") => self.get_metadata(req).await,
             (&hyper::Method::POST, "/metadata/select") => self.post_select_metadata(req).await,
-            _ => {
-                let mut res = Response::new(hyper_utils::empty());
-                *res.status_mut() = hyper::StatusCode::NOT_FOUND;
-                Ok(res)
-            }
+            _ => Ok(Response::builder()
+                .status(hyper::StatusCode::NOT_FOUND)
+                .body(hyper_utils::empty())
+                .unwrap()),
         };
 
         if let Err(e) = res {

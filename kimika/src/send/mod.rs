@@ -2,7 +2,7 @@ mod local;
 mod remote;
 pub mod utils;
 
-use crate::config;
+use crate::{config, CONFIG};
 use clap::Args;
 use crossterm::{style::Stylize, tty::IsTty};
 
@@ -48,6 +48,9 @@ pub async fn send(
         return Ok(());
     }
     config.update_from_send_args(&args);
+
+    #[allow(const_item_mutation)]
+    CONFIG.update_from_send_args(&args);
 
     if args.server {
         remote::remote_send(&args, &config).await?;

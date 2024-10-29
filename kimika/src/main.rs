@@ -8,6 +8,9 @@ mod server;
 pub mod utils;
 
 use clap::{Parser, Subcommand};
+use once_cell::sync::Lazy;
+
+pub const CONFIG: Lazy<config::Config> = Lazy::new(|| config::Config::new());
 
 #[derive(Parser)]
 #[command(version, long_about = None, styles = utils::clap::clap_styles())]

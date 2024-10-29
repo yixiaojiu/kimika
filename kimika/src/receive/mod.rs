@@ -1,8 +1,7 @@
 mod local;
 mod remote;
-mod udp;
 
-use crate::config;
+use crate::{config, CONFIG};
 use clap::Args;
 
 /// Receive file or message
@@ -35,6 +34,9 @@ pub async fn receive(
     config: &mut config::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
     config.update_from_receive_args(&args);
+
+    #[allow(const_item_mutation)]
+    CONFIG.update_from_receive_args(&args);
 
     if args.server {
         remote::remote_receive(&args, &config).await?;

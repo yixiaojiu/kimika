@@ -25,7 +25,7 @@ async fn async_log_init() {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     async_log_init().await;
 
-    let addr: SocketAddr = ([127, 0, 0, 1], 3939).into();
+    let addr: SocketAddr = ([0, 0, 0, 0], 3939).into();
 
     let listener = TcpListener::bind(addr).await?;
 

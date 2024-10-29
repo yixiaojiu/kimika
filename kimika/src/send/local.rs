@@ -4,7 +4,6 @@ use crate::request;
 use crate::server::sender;
 use crate::utils::select;
 
-use std::net;
 use std::net::SocketAddr;
 use tokio::sync::{mpsc, oneshot};
 
@@ -15,10 +14,7 @@ pub async fn local_send(
     let port = config.sender.port;
     let (close_boardcast_tx, close_boardcast_rx) = oneshot::channel::<()>();
 
-    let broadcast_addr = net::SocketAddr::new(
-        net::IpAddr::V4(net::Ipv4Addr::new(255, 255, 255, 255)),
-        config.sender.receiver_port,
-    );
+    let broadcast_addr: SocketAddr = ([255, 255, 255, 255], port).into();
 
     tokio::spawn(async move {
         request::udp::broadcast(broadcast_addr, port, close_boardcast_rx)

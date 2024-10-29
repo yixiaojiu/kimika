@@ -4,7 +4,9 @@ pub mod udp;
 
 use bytes::Bytes;
 use http_body_util::{combinators::BoxBody, BodyExt, Full};
-use hyper::Response;
+use hyper::{Request, Response};
+
+pub type RequestType = Request<hyper::body::Incoming>;
 
 pub type BodyType = BoxBody<Bytes, hyper::Error>;
 
