@@ -1,14 +1,17 @@
 use super::{full, rejection_response, RequestType, ResponseType};
-use crate::{utils::select, CONFIG};
+use crate::{utils, CONFIG};
 
 use bytes::Buf;
 use http_body_util::BodyExt;
 use hyper::{server::conn::http1, service::service_fn, Response};
 use hyper_util::rt::TokioIo;
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
 use std::sync::Arc;
+use std::{net::SocketAddr, path::PathBuf};
+use tokio::fs;
+use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::{net::TcpListener, sync::oneshot, sync::Mutex};
+use tokio_stream::StreamExt;
 use uuid::Uuid;
 
 #[derive(Clone, Debug)]
@@ -20,18 +23,13 @@ pub struct MetadataItem {
     pub file_name: Option<String>,
     pub file_type: Option<String>,
     pub size: Option<u64>,
-}
-
-pub struct ReceiverServer {
-    sender_alias: Arc<Mutex<Option<String>>>,
-    metadata_list: Arc<Mutex<Vec<MetadataItem>>>,
-    close_server_tx: Arc<oneshot::Sender<()>>,
+    pub completed: bool,
 }
 
 /** ====================================== */
 
-#[derive(Deserialize)]
-struct PayloadMetadataItem {
+#[derive(Deserialize, Serialize)]
+pub struct PayloadMetadataItem {
     id: String,
     /// file or message
     metadata_type: String,
@@ -40,24 +38,38 @@ struct PayloadMetadataItem {
     size: Option<u64>,
 }
 
-#[derive(Deserialize)]
-struct PostRegisterPayload {
+#[derive(Deserialize, Serialize)]
+pub struct PostRegisterPayload {
     alias: String,
     metadata_list: Vec<PayloadMetadataItem>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct ResponseMetadata {
-    id: String,
-    token: String,
+    pub id: String,
+    pub token: String,
 }
 
-#[derive(Serialize)]
-struct ResponseBody {
-    selected_metadata_list: Vec<ResponseMetadata>,
+#[derive(Serialize, Deserialize)]
+pub struct PostMetadataResponse {
+    pub selected_metadata_list: Vec<ResponseMetadata>,
 }
 
 /** ====================================== */
+
+#[derive(Deserialize)]
+struct PostUploadParams {
+    token: String,
+}
+
+/** ====================================== */
+
+pub struct ReceiverServer {
+    sender_alias: Arc<Mutex<Option<String>>>,
+    metadata_list: Arc<Mutex<Vec<MetadataItem>>>,
+    close_server_tx: Arc<Mutex<Option<oneshot::Sender<()>>>>,
+    close_udp_tx: Arc<Mutex<Option<oneshot::Sender<()>>>>,
+}
 
 impl Clone for ReceiverServer {
     fn clone(&self) -> Self {
@@ -65,16 +77,18 @@ impl Clone for ReceiverServer {
             sender_alias: Arc::clone(&self.sender_alias),
             metadata_list: Arc::clone(&self.metadata_list),
             close_server_tx: Arc::clone(&self.close_server_tx),
+            close_udp_tx: Arc::clone(&self.close_udp_tx),
         }
     }
 }
 
 impl ReceiverServer {
-    fn new(close_server_tx: Arc<oneshot::Sender<()>>) -> Self {
+    fn new(close_server_tx: oneshot::Sender<()>, close_udp_tx: oneshot::Sender<()>) -> Self {
         Self {
             metadata_list: Arc::new(Mutex::new(vec![])),
             sender_alias: Arc::new(Mutex::new(None)),
-            close_server_tx,
+            close_server_tx: Arc::new(Mutex::new(Some(close_server_tx))),
+            close_udp_tx: Arc::new(Mutex::new(Some(close_udp_tx))),
         }
     }
 
@@ -98,7 +112,7 @@ impl ReceiverServer {
         res
     }
 
-    pub async fn post_metadata(self, req: RequestType) -> ResponseType {
+    async fn post_metadata(self, req: RequestType) -> ResponseType {
         let mut sender_alias_guard = self.sender_alias.lock().await;
         if sender_alias_guard.is_some() {
             return Ok(rejection_response("Receiver already being connected"));
@@ -122,6 +136,7 @@ impl ReceiverServer {
                 file_name: v.file_name.clone(),
                 file_type: v.file_type.clone(),
                 size: v.size.clone(),
+                completed: false,
             })
             .collect();
 
@@ -136,18 +151,94 @@ impl ReceiverServer {
         let mut metadata_list_guard = self.metadata_list.lock().await;
         metadata_list_guard.extend(metadata_list);
 
-        Ok(Response::new(full(serde_json::to_string(&ResponseBody {
-            selected_metadata_list,
-        })?)))
+        if let Some(close_udp_tx) = self.close_udp_tx.lock().await.take() {
+            if let Err(e) = close_udp_tx.send(()) {
+                eprintln!("Error: {:?}", e);
+            };
+        }
+
+        Ok(Response::new(full(serde_json::to_string(
+            &PostMetadataResponse {
+                selected_metadata_list,
+            },
+        )?)))
+    }
+
+    async fn post_upload(self, req: RequestType) -> ResponseType {
+        let (parts, req_body) = req.into_parts();
+        // TODO none hander
+        let query = parts.uri.query().unwrap();
+        let params: PostUploadParams = serde_qs::from_str(query)?;
+
+        let metadata_list_guard = self.metadata_list.lock().await;
+        let metadata = match metadata_list_guard.iter().find(|v| v.token == params.token) {
+            Some(metadata) => {
+                if metadata.completed {
+                    return Ok(rejection_response("Metadata already completed"));
+                }
+                metadata.clone()
+            }
+            None => {
+                return Ok(rejection_response("Metadata check failed"));
+            }
+        };
+        drop(metadata_list_guard);
+
+        if metadata.metadata_type == "file" {
+            let mut stream = req_body.into_data_stream();
+            let mut pathbuf = PathBuf::from(CONFIG.receiver.save_folder.clone());
+            let filename = metadata.file_name.clone().unwrap();
+            pathbuf.push(&filename);
+            let mut rename_num = 1;
+            loop {
+                if !pathbuf.exists() {
+                    break;
+                }
+                pathbuf.set_file_name(format!("{}({})", &filename, rename_num));
+                rename_num += 1;
+            }
+            let total_size = metadata.size.unwrap();
+            let progreebar = utils::handle::create_progress_bar(total_size, &filename);
+            let mut buffer_writer = BufWriter::new(fs::File::create(pathbuf).await?);
+            let mut downloaded_size = 0;
+            while let Some(chunk) = stream.next().await {
+                let chunk = chunk?;
+                buffer_writer.write(&chunk).await?;
+                downloaded_size += chunk.len() as u64;
+                progreebar.set_position(std::cmp::min(downloaded_size, total_size));
+            }
+            buffer_writer.flush().await?;
+            progreebar.finish_with_message(filename);
+        } else {
+            let body = req_body.collect().await?;
+            println!("{}", String::from_utf8_lossy(&body.to_bytes()));
+        }
+
+        let mut metadata_list_guard = self.metadata_list.lock().await;
+        metadata_list_guard.iter_mut().for_each(|v| {
+            if v.token == metadata.token {
+                v.completed = true
+            }
+        });
+        let all_completed = metadata_list_guard.iter().all(|v| v.completed == true);
+        if all_completed {
+            if let Some(close_server_tx) = self.close_server_tx.lock().await.take() {
+                if let Err(e) = close_server_tx.send(()) {
+                    eprintln!("Error: {:?}", e);
+                };
+            }
+        }
+
+        Ok(Response::new(full("ok")))
     }
 }
 
-pub async fn start_server() -> Result<(), std::io::Error> {
+pub async fn start_server(close_udp_tx: oneshot::Sender<()>) -> Result<(), std::io::Error> {
     let address: SocketAddr = ([0, 0, 0, 0], CONFIG.receiver.port).into();
     let (close_server_tx, mut close_server_rx) = oneshot::channel::<()>();
 
     let listener = TcpListener::bind(address).await?;
-    let server = ReceiverServer::new(Arc::new(close_server_tx));
+    let server = ReceiverServer::new(close_server_tx, close_udp_tx);
 
     let server_service = service_fn(move |req| server.clone().handle(req));
 

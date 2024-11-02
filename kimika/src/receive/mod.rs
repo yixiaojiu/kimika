@@ -41,7 +41,7 @@ pub async fn receive(
     if args.server {
         remote::remote_receive(&args, &config).await?;
     } else {
-        local::local_receive(&args, &config).await?;
+        local::local_receive().await?;
     }
 
     Ok(())

@@ -1,4 +1,4 @@
-use crate::server::sender;
+use crate::server::{receiver, sender};
 use reqwest::{Client, Url};
 use std::net::SocketAddr;
 
@@ -28,5 +28,17 @@ impl RequestClient {
         let bytes = result.bytes().await?;
 
         Ok(String::from_utf8_lossy(&bytes).to_string())
+    }
+
+    pub async fn post_metadata(
+        &self,
+        payload: &receiver::PostRegisterPayload,
+    ) -> Result<receiver::PostMetadataResponse, reqwest::Error> {
+        let mut url = self.url.clone();
+        url.set_path("/register");
+
+        let result = Client::new().post(url).json(payload).send().await?;
+        let bytes = result.bytes().await?;
+        Ok(serde_json::from_slice(&bytes).unwrap())
     }
 }

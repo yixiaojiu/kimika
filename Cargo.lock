@@ -788,6 +788,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "serde_qs",
  "tokio",
  "tokio-stream",
  "tokio-util",

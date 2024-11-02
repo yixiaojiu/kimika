@@ -27,15 +27,16 @@ enum Commands {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     let cli = Cli::parse();
     let mut config = config::Config::new();
 
-    match cli.command {
-        Commands::Send(args) => send::send(args, &mut config).await?,
-        Commands::Receive(args) => receive::receive(args, &mut config).await?,
+    let result = match cli.command {
+        Commands::Send(args) => send::send(args, &mut config).await,
+        Commands::Receive(args) => receive::receive(args, &mut config).await,
         // Commands::Test => utils::multiselect::metadata_select().await?,
+    };
+    if let Err(e) = result {
+        eprintln!("Error: {}", e);
     }
-
-    Ok(())
 }
