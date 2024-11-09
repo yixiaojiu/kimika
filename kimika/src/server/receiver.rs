@@ -30,22 +30,22 @@ pub struct MetadataItem {
 
 #[derive(Deserialize, Serialize)]
 pub struct PayloadMetadataItem {
-    id: String,
+    pub id: String,
     /// file or message
-    metadata_type: String,
-    file_name: Option<String>,
-    file_type: Option<String>,
-    size: Option<u64>,
+    pub metadata_type: String,
+    pub file_name: Option<String>,
+    pub file_type: Option<String>,
+    pub size: Option<u64>,
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct PostRegisterPayload {
-    alias: String,
-    metadata_list: Vec<PayloadMetadataItem>,
+    pub alias: String,
+    pub metadata_list: Vec<PayloadMetadataItem>,
 }
 
 #[derive(Serialize, Deserialize)]
-struct ResponseMetadata {
+pub struct ResponseMetadata {
     pub id: String,
     pub token: String,
 }
@@ -57,9 +57,9 @@ pub struct PostMetadataResponse {
 
 /** ====================================== */
 
-#[derive(Deserialize)]
-struct PostUploadParams {
-    token: String,
+#[derive(Deserialize, Serialize)]
+pub struct PostUploadParams {
+    pub token: String,
 }
 
 /** ====================================== */
@@ -98,6 +98,7 @@ impl ReceiverServer {
 
         let res = match (method, path) {
             (&hyper::Method::POST, "/metadata") => self.post_metadata(req).await,
+            (&hyper::Method::POST, "/upload") => self.post_upload(req).await,
             _ => Ok(Response::builder()
                 .status(hyper::StatusCode::NOT_FOUND)
                 .body(full(""))

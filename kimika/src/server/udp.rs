@@ -8,7 +8,7 @@ use tokio::sync::oneshot;
 
 const BUFFER_SIZE: usize = 1024;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct UDPPacket {
     /// sender linsten port
     pub port: u16,
@@ -31,15 +31,7 @@ pub async fn listen_boardcast(mut close_rx: oneshot::Receiver<()>) -> Result<(),
                 if let Ok(packet) = serde_json::from_slice::<UDPPacket>(&buffer[..num_bytes]) {
                     let request =
                         request_local::RequestClient::new(&SocketAddr::new(address.ip(), packet.port));
-                    let result = request.register(CONFIG.alias.clone(), CONFIG.receiver.port).await;
-                    match result {
-                        Ok(result) => {
-                            println!("sucess {}", result);
-                        }
-                        Err(e) => {
-                            println!("error {}", e);
-                        }
-                    }
+                    request.register(CONFIG.alias.clone(), CONFIG.receiver.port).await.unwrap();
                 };
                 continue;
             }

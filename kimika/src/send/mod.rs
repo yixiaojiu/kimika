@@ -1,6 +1,5 @@
 mod local;
 mod remote;
-pub mod utils;
 
 use crate::{config, CONFIG};
 use clap::Args;

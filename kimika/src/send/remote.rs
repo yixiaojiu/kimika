@@ -1,10 +1,10 @@
-use super::utils::{Content, ContentType};
 use super::SendArgs;
+use crate::config;
 use crate::request::remote as request_remote;
-use crate::{config, utils::handle, utils::select};
+use crate::utils::{handle, select, Content, ContentType};
+
 use crossterm::style::Stylize;
-use std::sync::Arc;
-use std::{fs, path::PathBuf};
+use std::{path::PathBuf, sync::Arc};
 use tokio::{sync::mpsc, time};
 use uuid::Uuid;
 
@@ -90,7 +90,7 @@ pub async fn remote_send(
             },
             ContentType::File => {
                 let pathbuf = content.path.as_ref().unwrap();
-                let metadata = fs::metadata(pathbuf).expect("get metadata failed");
+                let metadata = std::fs::metadata(pathbuf).expect("get metadata failed");
                 let filename = pathbuf
                     .file_name()
                     .expect("invalid file name")

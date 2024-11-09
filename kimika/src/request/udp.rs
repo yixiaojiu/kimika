@@ -1,17 +1,14 @@
 use crate::server::udp::UDPPacket;
+use crate::CONFIG;
 
 use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 use tokio::sync::oneshot;
 use tokio::time;
 
-/// `port` is sender listen port
-pub async fn broadcast(
-    broadcast_addr: SocketAddr,
-    port: u16,
-    mut close_rx: oneshot::Receiver<()>,
-) -> Result<(), std::io::Error> {
+pub async fn broadcast(mut close_rx: oneshot::Receiver<()>) -> Result<(), std::io::Error> {
     let socket = UdpSocket::bind("0.0.0.0:0").await?;
+    let broadcast_addr: SocketAddr = ([255, 255, 255, 255], CONFIG.sender.receiver_port).into();
     socket.set_broadcast(true)?;
 
     loop {
@@ -23,7 +20,7 @@ pub async fn broadcast(
 
                 socket
                     .send_to(
-                        serde_json::to_string(&UDPPacket { port })
+                        serde_json::to_string(&UDPPacket { port: CONFIG.sender.port })
                             .unwrap()
                             .as_bytes(),
                         &broadcast_addr,

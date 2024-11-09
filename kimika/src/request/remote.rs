@@ -1,4 +1,3 @@
-use crate::send::utils::{Content, ContentType};
 use crate::utils;
 use reqwest::{Body, Client, Url};
 use serde::{Deserialize, Serialize};
@@ -159,7 +158,7 @@ impl RequestClient {
 
     pub async fn post_upload(
         &self,
-        content: &Content,
+        content: &utils::Content,
         payload: PostUploadParams,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut url = self.url.clone();
@@ -168,7 +167,7 @@ impl RequestClient {
         let request_builder = Client::new().post(url).query(&payload);
 
         match content.content_type {
-            ContentType::File => {
+            utils::ContentType::File => {
                 let path = content.path.as_ref().unwrap().clone();
                 let filename = path
                     .file_name()
@@ -213,7 +212,7 @@ impl RequestClient {
                     .send()
                     .await?;
             }
-            ContentType::Message => {
+            utils::ContentType::Message => {
                 let message = content.message.as_ref().unwrap().clone();
                 request_builder.body(message).send().await?;
             }
