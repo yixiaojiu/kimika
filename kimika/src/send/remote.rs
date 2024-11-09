@@ -1,17 +1,14 @@
 use super::SendArgs;
-use crate::config;
 use crate::request::remote as request_remote;
 use crate::utils::{handle, select, Content, ContentType};
+use crate::CONFIG;
 
 use crossterm::style::Stylize;
 use std::{path::PathBuf, sync::Arc};
 use tokio::{sync::mpsc, time};
 use uuid::Uuid;
 
-pub async fn remote_send(
-    args: &SendArgs,
-    config: &config::Config,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
     let mut content_list = Vec::new();
     if let Some(message) = handle::handle_message(args) {
         content_list.push(Content {
@@ -38,7 +35,7 @@ pub async fn remote_send(
         });
     };
 
-    let address = if let Some(addr) = handle::handle_address(args.address.clone(), config) {
+    let address = if let Some(addr) = handle::handle_address(args.address.clone()) {
         addr
     } else {
         println!("{}", "No server address configured".red());
@@ -110,7 +107,7 @@ pub async fn remote_send(
     let res = request
         .post_metadata(&request_remote::PostMetadataPayload {
             receiver_id: selected_receiver_id.clone(),
-            alias: config.alias.clone(),
+            alias: CONFIG.alias.clone(),
             metadata: metadata_list,
         })
         .await

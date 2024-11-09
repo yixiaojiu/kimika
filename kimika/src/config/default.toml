@@ -3,8 +3,8 @@ auto_select_first_server = true
 
 [receiver]
 save_folder = "./"
-port = 3940
+port = 3939
 
 [sender]
 port = 3939
-receiver_port = 3940
+receiver_port = 3939

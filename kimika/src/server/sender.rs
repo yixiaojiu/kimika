@@ -1,16 +1,16 @@
 use super::{full, RequestType, ResponseType};
+use crate::CONFIG;
 
 use bytes::Buf;
 use http_body_util::BodyExt;
-use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
-use tokio::net::TcpListener;
-use tokio::sync::{mpsc, oneshot};
-
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::Response;
 use hyper_util::rt::TokioIo;
+use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
+use tokio::net::TcpListener;
+use tokio::sync::{mpsc, oneshot};
 
 #[derive(Deserialize, Serialize)]
 pub struct Payload {
@@ -52,11 +52,10 @@ async fn handle(req: RequestType, address: SocketAddr, tx: mpsc::Sender<Receiver
 }
 
 pub async fn start_server(
-    port: u16,
     tx: mpsc::Sender<Receiver>,
     mut close_rx: oneshot::Receiver<()>,
 ) -> Result<(), std::io::Error> {
-    let addr: SocketAddr = ([0, 0, 0, 0], port).into();
+    let addr: SocketAddr = ([0, 0, 0, 0], CONFIG.sender.port).into();
     let listener = TcpListener::bind(addr).await?;
 
     loop {

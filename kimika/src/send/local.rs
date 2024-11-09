@@ -1,5 +1,4 @@
 use super::SendArgs;
-use crate::config;
 use crate::request::{local as request_local, udp};
 use crate::server::receiver;
 use crate::server::sender;
@@ -10,10 +9,7 @@ use std::path::PathBuf;
 use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
-pub async fn local_send(
-    args: &SendArgs,
-    config: &config::Config,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
     let mut content_list = Vec::new();
     if let Some(message) = handle::handle_message(args) {
         content_list.push(Content {
@@ -40,7 +36,6 @@ pub async fn local_send(
         });
     };
 
-    let port = config.sender.port;
     let (close_boardcast_tx, close_boardcast_rx) = oneshot::channel::<()>();
 
     tokio::spawn(async move {
@@ -50,7 +45,7 @@ pub async fn local_send(
     let (receiver_tx, mut receiver_rx) = mpsc::channel(1);
     let (close_server_tx, close_server_rx) = oneshot::channel::<()>();
     tokio::spawn(async move {
-        sender::start_server(port, receiver_tx, close_server_rx)
+        sender::start_server(receiver_tx, close_server_rx)
             .await
             .unwrap();
     });

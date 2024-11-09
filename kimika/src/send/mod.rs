@@ -1,7 +1,7 @@
 mod local;
 mod remote;
 
-use crate::{config, CONFIG};
+use crate::CONFIG;
 use clap::Args;
 use crossterm::{style::Stylize, tty::IsTty};
 
@@ -38,23 +38,18 @@ pub struct SendArgs {
     pub server: bool,
 }
 
-pub async fn send(
-    args: SendArgs,
-    config: &mut config::Config,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send(args: SendArgs) -> Result<(), Box<dyn std::error::Error>> {
     if args.path.is_none() && args.message.is_none() && std::io::stdin().is_tty() {
         println!("{}", "Please specify a file or a message".yellow());
         return Ok(());
     }
-    config.update_from_send_args(&args);
 
-    #[allow(const_item_mutation)]
-    CONFIG.update_from_send_args(&args);
+    let _result = CONFIG.set_from_send_args(&args);
 
     if args.server {
-        remote::remote_send(&args, &config).await?;
+        remote::remote_send(&args).await?;
     } else {
-        local::local_send(&args, &config).await?;
+        local::local_send(&args).await?;
     }
 
     Ok(())

@@ -1,7 +1,8 @@
 use super::ReceiveArgs;
 use crate::request::remote as request_remote;
 use crate::utils;
-use crate::{config, utils::handle};
+use crate::utils::handle;
+use crate::CONFIG;
 
 use crossterm::style::Stylize;
 use std::path::PathBuf;
@@ -9,11 +10,8 @@ use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::{fs, time};
 use tokio_stream::StreamExt;
 
-pub async fn remote_receive(
-    args: &ReceiveArgs,
-    config: &config::Config,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let address = if let Some(addr) = handle::handle_address(args.address.clone(), config) {
+pub async fn remote_receive(args: &ReceiveArgs) -> Result<(), Box<dyn std::error::Error>> {
+    let address = if let Some(addr) = handle::handle_address(args.address.clone()) {
         addr
     } else {
         println!("{}", "No server address configured".red());
@@ -25,7 +23,7 @@ pub async fn remote_receive(
     let mac_address = utils::handle::get_mac_address();
 
     let receiver_id = request
-        .post_register(config.alias.clone(), mac_address)
+        .post_register(CONFIG.alias.clone(), mac_address)
         .await?
         .id;
 
@@ -56,7 +54,7 @@ pub async fn remote_receive(
             .await?;
 
         if metadata.metadata_type == "file" {
-            let mut pathbuf = PathBuf::from(config.receiver.save_folder.clone());
+            let mut pathbuf = PathBuf::from(CONFIG.receiver.save_folder.clone());
             let filename = metadata.file_name.unwrap();
             pathbuf.push(&filename);
             let mut rename_num = 1;

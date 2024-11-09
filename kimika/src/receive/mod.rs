@@ -1,7 +1,7 @@
 mod local;
 mod remote;
 
-use crate::{config, CONFIG};
+use crate::CONFIG;
 use clap::Args;
 
 /// Receive file or message
@@ -29,17 +29,11 @@ pub struct ReceiveArgs {
     pub address: Option<String>,
 }
 
-pub async fn receive(
-    args: ReceiveArgs,
-    config: &mut config::Config,
-) -> Result<(), Box<dyn std::error::Error>> {
-    config.update_from_receive_args(&args);
-
-    #[allow(const_item_mutation)]
-    CONFIG.update_from_receive_args(&args);
+pub async fn receive(args: ReceiveArgs) -> Result<(), Box<dyn std::error::Error>> {
+    let _result = CONFIG.set_from_receive_args(&args);
 
     if args.server {
-        remote::remote_receive(&args, &config).await?;
+        remote::remote_receive(&args).await?;
     } else {
         local::local_receive().await?;
     }

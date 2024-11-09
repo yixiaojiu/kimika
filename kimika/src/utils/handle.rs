@@ -1,5 +1,7 @@
+use crate::send::SendArgs;
 use crate::utils::crossterm::try_read_from_pipeline;
-use crate::{config, send::SendArgs};
+use crate::CONFIG;
+
 use crossterm::style::Stylize;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::net::SocketAddr;
@@ -13,17 +15,17 @@ pub fn create_progress_bar(total_size: u64, filename: &String) -> ProgressBar {
     pb
 }
 
-pub fn handle_address(address: Option<String>, config: &config::Config) -> Option<SocketAddr> {
+pub fn handle_address(address: Option<String>) -> Option<SocketAddr> {
     if let Some(address_str) = address {
         // search through alias
         Some(address_str.parse::<SocketAddr>().expect("invalid address"))
     } else {
-        if config.server.is_empty() {
+        if CONFIG.server.is_empty() {
             println!("{}", "No server address configured".red());
             None
         } else {
             Some(
-                config.server[0]
+                CONFIG.server[0]
                     .address
                     .parse::<SocketAddr>()
                     .expect("invalid address"),
