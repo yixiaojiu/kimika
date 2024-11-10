@@ -11,13 +11,13 @@ use crossterm::{style::Stylize, tty::IsTty};
 pub struct SendArgs {
     /// The path of file which want to send
     #[arg(short, long, value_name = "path")]
-    pub path: Option<String>,
+    pub path: Option<Vec<std::path::PathBuf>>,
 
     /// Text which wants to send
     #[arg(short, long, value_name = "message")]
-    pub message: Option<String>,
+    pub message: Option<Vec<String>>,
 
-    /// Receiver address or remote server address. Such as: example.com
+    /// Receiver address or remote server address. Such as: example.com:3939
     #[arg(short, long, value_name = "address")]
     pub address: Option<String>,
 

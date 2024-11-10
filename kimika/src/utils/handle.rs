@@ -8,7 +8,7 @@ use std::net::SocketAddr;
 
 pub fn create_progress_bar(total_size: u64, filename: &String) -> ProgressBar {
     let pb = ProgressBar::new(total_size);
-    pb.set_style(ProgressStyle::with_template("{msg:.green} {spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})")
+    pb.set_style(ProgressStyle::with_template("{msg:10.green} {spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})")
         .unwrap()
         .progress_chars("#>-"));
     pb.set_message(filename.clone());
@@ -34,7 +34,7 @@ pub fn handle_address(address: Option<String>) -> Option<SocketAddr> {
     }
 }
 
-pub fn handle_message(args: &SendArgs) -> Option<String> {
+pub fn handle_message(args: &SendArgs) -> Option<Vec<String>> {
     if let Some(message) = &args.message {
         Some(message.clone())
     } else {

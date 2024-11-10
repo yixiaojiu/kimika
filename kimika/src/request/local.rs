@@ -1,6 +1,7 @@
 use crate::server::{receiver, sender};
 use crate::{utils, CONFIG};
 
+use crossterm::style::Stylize;
 use reqwest::{Body, Client, Url};
 use std::net::SocketAddr;
 use tokio::{
@@ -117,6 +118,7 @@ impl RequestClient {
             utils::ContentType::Message => {
                 let message = content.message.as_ref().unwrap().clone();
                 request_builder.body(message).send().await?;
+                println!("{}", "Message".green());
             }
         }
         Ok(())

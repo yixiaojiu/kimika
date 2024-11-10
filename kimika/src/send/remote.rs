@@ -4,35 +4,39 @@ use crate::utils::{handle, select, Content, ContentType};
 use crate::CONFIG;
 
 use crossterm::style::Stylize;
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 use tokio::{sync::mpsc, time};
 use uuid::Uuid;
 
 pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error>> {
     let mut content_list = Vec::new();
     if let Some(message) = handle::handle_message(args) {
-        content_list.push(Content {
-            id: Uuid::new_v4().to_string(),
-            content_type: ContentType::Message,
-            message: Some(message),
-            path: None,
-        });
+        for message_item in message {
+            content_list.push(Content {
+                id: Uuid::new_v4().to_string(),
+                content_type: ContentType::Message,
+                message: Some(message_item),
+                path: None,
+            });
+        }
     }
     if let Some(path) = &args.path {
-        let pathbuf = PathBuf::from(path);
+        for path_item in path {
+            let pathbuf = path_item.clone();
 
-        if !pathbuf.exists() {
-            return Err("file not exists".into());
+            if !pathbuf.exists() {
+                return Err("file not exists".into());
+            }
+            if pathbuf.is_dir() {
+                return Err("send directory is not supported".into());
+            }
+            content_list.push(Content {
+                id: Uuid::new_v4().to_string(),
+                content_type: ContentType::File,
+                message: None,
+                path: Some(pathbuf),
+            });
         }
-        if pathbuf.is_dir() {
-            return Err("send directory is not supported".into());
-        }
-        content_list.push(Content {
-            id: Uuid::new_v4().to_string(),
-            content_type: ContentType::File,
-            message: None,
-            path: Some(pathbuf),
-        });
     };
 
     let address = if let Some(addr) = handle::handle_address(args.address.clone()) {
