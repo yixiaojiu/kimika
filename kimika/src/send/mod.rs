@@ -44,7 +44,7 @@ pub async fn send(args: SendArgs) -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let _result = CONFIG.set_from_send_args(&args);
+    CONFIG.set_from_send_args(&args).unwrap();
 
     if args.server {
         remote::remote_send(&args).await?;

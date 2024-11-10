@@ -30,7 +30,7 @@ pub struct ReceiveArgs {
 }
 
 pub async fn receive(args: ReceiveArgs) -> Result<(), Box<dyn std::error::Error>> {
-    let _result = CONFIG.set_from_receive_args(&args);
+    CONFIG.set_from_receive_args(&args).unwrap();
 
     if args.server {
         remote::remote_receive(&args).await?;

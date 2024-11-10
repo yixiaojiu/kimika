@@ -9,9 +9,8 @@ mod utils;
 
 use clap::{Parser, Subcommand};
 use config::ConfigOnceCell;
-use once_cell::sync::OnceCell;
 
-pub static CONFIG: ConfigOnceCell = ConfigOnceCell(OnceCell::new());
+pub static CONFIG: ConfigOnceCell = ConfigOnceCell::new();
 
 #[derive(Parser)]
 #[command(version, long_about = None, styles = utils::clap::clap_styles())]
