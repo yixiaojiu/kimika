@@ -4,6 +4,7 @@ use crate::CONFIG;
 
 use crossterm::style::Stylize;
 use indicatif::{ProgressBar, ProgressStyle};
+use inquire::{Confirm, InquireError};
 use std::net::SocketAddr;
 
 pub fn create_progress_bar(total_size: u64, filename: &String) -> ProgressBar {
@@ -48,4 +49,14 @@ pub fn get_mac_address() -> Option<String> {
     } else {
         None
     }
+}
+
+pub fn handle_confirm(alias: &str) -> Result<bool, InquireError> {
+    if CONFIG.receiver.auto_confirm {
+        return Ok(true);
+    }
+    Confirm::new(&format!("Do you want to receive from [ {} ]?", alias))
+        .with_default(true)
+        .with_help_message("The default is true")
+        .prompt()
 }

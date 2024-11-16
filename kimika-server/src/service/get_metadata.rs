@@ -26,6 +26,8 @@ pub struct MetadataItem {
 #[derive(Serialize)]
 struct ResponseBody {
     metadatas: Vec<MetadataItem>,
+    /// sender alias
+    alias: Option<String>,
 }
 
 impl Server {
@@ -51,13 +53,21 @@ impl Server {
                 })
                 .collect();
             let body = hyper_utils::full(Bytes::from(
-                serde_json::to_string(&ResponseBody { metadatas }).unwrap(),
+                serde_json::to_string(&ResponseBody {
+                    metadatas,
+                    alias: Some(metadata.sender.alias.clone()),
+                })
+                .unwrap(),
             ));
             let res = Response::new(body);
             Ok(res)
         } else {
             let body = hyper_utils::full(Bytes::from(
-                serde_json::to_string(&ResponseBody { metadatas: vec![] }).unwrap(),
+                serde_json::to_string(&ResponseBody {
+                    metadatas: vec![],
+                    alias: None,
+                })
+                .unwrap(),
             ));
             let mut res = Response::new(body);
             *res.status_mut() = hyper::StatusCode::BAD_REQUEST;

@@ -28,10 +28,13 @@ pub async fn remote_receive(args: &ReceiveArgs) -> Result<(), Box<dyn std::error
         .id;
 
     let mut metadatas = Vec::new();
+    let mut sender_alias: Option<String> = None;
     loop {
         let result = request.get_metadata(receiver_id.clone()).await;
         if result.is_ok() {
-            metadatas = result?.metadatas;
+            let res = result?;
+            sender_alias = res.alias.clone();
+            metadatas = res.metadatas;
         }
         if metadatas.len() > 0 {
             break;
@@ -39,12 +42,29 @@ pub async fn remote_receive(args: &ReceiveArgs) -> Result<(), Box<dyn std::error
         time::sleep(time::Duration::from_secs(2)).await;
     }
 
-    // TODO: select metadata
+    let answer = utils::handle::handle_confirm(match &sender_alias {
+        Some(alias) => alias,
+        None => "Unknown",
+    });
+
+    let mut selected_tokens: Vec<String> =
+        metadatas.iter().map(|item| item.token.clone()).collect();
+
+    match answer {
+        Err(err) => {
+            eprintln!("{}", err);
+        }
+        Ok(true) => {}
+        Ok(false) => {
+            selected_tokens.clear();
+            metadatas.clear();
+        }
+    }
 
     request
         .post_select_metadata(&request_remote::PostSelectMetadataPayload {
             id: receiver_id.clone(),
-            selected_tokens: metadatas.iter().map(|item| item.token.clone()).collect(),
+            selected_tokens,
         })
         .await?;
 

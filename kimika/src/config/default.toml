@@ -4,6 +4,7 @@ auto_select_first_server = true
 [receiver]
 save_folder = "./"
 port = 3939
+auto_confirm = false
 
 [sender]
 port = 3939

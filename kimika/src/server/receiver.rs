@@ -122,10 +122,43 @@ impl ReceiverServer {
         let body = req.collect().await?.aggregate();
         let payload: PostRegisterPayload = serde_json::from_reader(body.reader())?;
 
-        sender_alias_guard.replace(payload.alias);
+        sender_alias_guard.replace(payload.alias.clone());
         drop(sender_alias_guard);
 
-        // TODO: select metadata
+        let answer = utils::handle::handle_confirm(&payload.alias);
+
+        if let Some(close_udp_tx) = self.close_udp_tx.lock().await.take() {
+            if let Err(e) = close_udp_tx.send(()) {
+                eprintln!("Error: {:?}", e);
+            };
+        }
+
+        match answer {
+            Err(e) => {
+                if let Some(close_server_tx) = self.close_server_tx.lock().await.take() {
+                    if let Err(e) = close_server_tx.send(()) {
+                        eprintln!("Error: {:?}", e);
+                    };
+                }
+
+                let mut res = rejection_response(e.to_string());
+                *res.status_mut() = hyper::StatusCode::INTERNAL_SERVER_ERROR;
+                return Ok(res);
+            }
+            Ok(true) => {}
+            Ok(false) => {
+                if let Some(close_server_tx) = self.close_server_tx.lock().await.take() {
+                    if let Err(e) = close_server_tx.send(()) {
+                        eprintln!("Error: {:?}", e);
+                    };
+                }
+                return Ok(Response::new(full(serde_json::to_string(
+                    &PostMetadataResponse {
+                        selected_metadata_list: vec![],
+                    },
+                )?)));
+            }
+        }
 
         let metadata_list: Vec<MetadataItem> = payload
             .metadata_list
@@ -151,12 +184,6 @@ impl ReceiverServer {
 
         let mut metadata_list_guard = self.metadata_list.lock().await;
         metadata_list_guard.extend(metadata_list);
-
-        if let Some(close_udp_tx) = self.close_udp_tx.lock().await.take() {
-            if let Err(e) = close_udp_tx.send(()) {
-                eprintln!("Error: {:?}", e);
-            };
-        }
 
         Ok(Response::new(full(serde_json::to_string(
             &PostMetadataResponse {

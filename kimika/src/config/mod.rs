@@ -25,6 +25,7 @@ pub struct ServerConfig {
 pub struct ReceiverConfig {
     pub save_folder: String,
     pub port: u16,
+    pub auto_confirm: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

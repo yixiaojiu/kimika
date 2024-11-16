@@ -103,6 +103,8 @@ pub struct GetMetadataParams {
 #[derive(Deserialize)]
 pub struct GetMetadataResponse {
     pub metadatas: Vec<MetadataItem>,
+    /// sender alias
+    pub alias: Option<String>,
 }
 
 /** ===================================== */
