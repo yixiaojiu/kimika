@@ -45,7 +45,3 @@ Local Area Network
 Remote Server
 
 ![remote_procedure](assets/remote_procedure.png)
-
-## Roadmap
-
-- [ ] Change grpc to http

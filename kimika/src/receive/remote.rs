@@ -5,6 +5,7 @@ use crate::utils::handle;
 use crate::CONFIG;
 
 use crossterm::style::Stylize;
+use inquire::InquireError;
 use std::path::PathBuf;
 use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::{fs, time};
@@ -52,7 +53,16 @@ pub async fn remote_receive(args: &ReceiveArgs) -> Result<(), Box<dyn std::error
 
     match answer {
         Err(err) => {
-            eprintln!("{}", err);
+            if match err {
+                InquireError::OperationCanceled => true,
+                InquireError::OperationInterrupted => true,
+                _ => false,
+            } {
+                selected_tokens.clear();
+                metadatas.clear();
+            } else {
+                eprintln!("{}", err);
+            }
         }
         Ok(true) => {}
         Ok(false) => {

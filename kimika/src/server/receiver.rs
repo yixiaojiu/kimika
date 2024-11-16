@@ -5,6 +5,7 @@ use bytes::Buf;
 use http_body_util::BodyExt;
 use hyper::{server::conn::http1, service::service_fn, Response};
 use hyper_util::rt::TokioIo;
+use inquire::InquireError;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::{net::SocketAddr, path::PathBuf};
@@ -127,31 +128,32 @@ impl ReceiverServer {
 
         let answer = utils::handle::handle_confirm(&payload.alias);
 
-        if let Some(close_udp_tx) = self.close_udp_tx.lock().await.take() {
-            if let Err(e) = close_udp_tx.send(()) {
-                eprintln!("Error: {:?}", e);
-            };
-        }
+        self.try_close_udp().await;
 
         match answer {
-            Err(e) => {
-                if let Some(close_server_tx) = self.close_server_tx.lock().await.take() {
-                    if let Err(e) = close_server_tx.send(()) {
-                        eprintln!("Error: {:?}", e);
-                    };
-                }
+            Err(err) => {
+                self.try_close_server().await;
 
-                let mut res = rejection_response(e.to_string());
-                *res.status_mut() = hyper::StatusCode::INTERNAL_SERVER_ERROR;
+                let res = if match err {
+                    InquireError::OperationCanceled => true,
+                    InquireError::OperationInterrupted => true,
+                    _ => false,
+                } {
+                    Response::new(full(serde_json::to_string(&PostMetadataResponse {
+                        selected_metadata_list: vec![],
+                    })?))
+                } else {
+                    let mut res = rejection_response(err.to_string());
+                    *res.status_mut() = hyper::StatusCode::INTERNAL_SERVER_ERROR;
+                    res
+                };
+
                 return Ok(res);
             }
             Ok(true) => {}
             Ok(false) => {
-                if let Some(close_server_tx) = self.close_server_tx.lock().await.take() {
-                    if let Err(e) = close_server_tx.send(()) {
-                        eprintln!("Error: {:?}", e);
-                    };
-                }
+                self.try_close_server().await;
+
                 return Ok(Response::new(full(serde_json::to_string(
                     &PostMetadataResponse {
                         selected_metadata_list: vec![],
@@ -248,16 +250,27 @@ impl ReceiverServer {
                 v.completed = true
             }
         });
-        let all_completed = metadata_list_guard.iter().all(|v| v.completed == true);
-        if all_completed {
-            if let Some(close_server_tx) = self.close_server_tx.lock().await.take() {
-                if let Err(e) = close_server_tx.send(()) {
-                    eprintln!("Error: {:?}", e);
-                };
-            }
+        if metadata_list_guard.iter().all(|v| v.completed == true) {
+            self.try_close_server().await;
         }
 
         Ok(Response::new(full("ok")))
+    }
+
+    async fn try_close_server(&self) {
+        if let Some(close_server_tx) = self.close_server_tx.lock().await.take() {
+            if let Err(e) = close_server_tx.send(()) {
+                eprintln!("Error: {:?}", e);
+            };
+        }
+    }
+
+    async fn try_close_udp(&self) {
+        if let Some(close_udp_tx) = self.close_udp_tx.lock().await.take() {
+            if let Err(e) = close_udp_tx.send(()) {
+                eprintln!("Error: {:?}", e);
+            };
+        }
     }
 }
 
