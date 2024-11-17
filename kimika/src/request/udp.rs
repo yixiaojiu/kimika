@@ -8,7 +8,7 @@ use tokio::time;
 
 pub async fn broadcast(mut close_rx: oneshot::Receiver<()>) -> Result<(), std::io::Error> {
     let socket = UdpSocket::bind("0.0.0.0:0").await?;
-    let broadcast_addr: SocketAddr = ([255, 255, 255, 255], CONFIG.sender.receiver_port).into();
+    let broadcast_addr: SocketAddr = ([224, 0, 0, 139], CONFIG.sender.receiver_port).into();
     socket.set_broadcast(true)?;
 
     loop {

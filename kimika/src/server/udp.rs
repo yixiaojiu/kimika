@@ -2,7 +2,7 @@ use crate::request::local as request_local;
 use crate::CONFIG;
 
 use serde::{Deserialize, Serialize};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 use tokio::sync::oneshot;
 
@@ -15,9 +15,11 @@ pub struct UDPPacket {
 }
 
 pub async fn listen_boardcast(mut close_rx: oneshot::Receiver<()>) -> Result<(), std::io::Error> {
-    let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), CONFIG.receiver.port);
+    let address: SocketAddr = ([0, 0, 0, 0], CONFIG.sender.receiver_port).into();
     let socket = UdpSocket::bind(address).await?;
     socket.set_broadcast(true)?;
+
+    socket.join_multicast_v4("224.0.0.139".parse().unwrap(), "0.0.0.0".parse().unwrap())?;
     let mut buffer = vec![0u8; BUFFER_SIZE];
 
     loop {
