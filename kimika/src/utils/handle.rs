@@ -1,11 +1,11 @@
 use crate::send::SendArgs;
 use crate::utils::crossterm::try_read_from_pipeline;
+use crate::utils::Host;
 use crate::CONFIG;
 
-use crossterm::style::Stylize;
 use indicatif::{ProgressBar, ProgressStyle};
+use inquire::Select;
 use inquire::{Confirm, InquireError};
-use std::net::SocketAddr;
 
 pub fn create_progress_bar(total_size: u64, filename: &String) -> ProgressBar {
     let pb = ProgressBar::new(total_size);
@@ -16,21 +16,41 @@ pub fn create_progress_bar(total_size: u64, filename: &String) -> ProgressBar {
     pb
 }
 
-pub fn handle_address(address: Option<String>) -> Option<SocketAddr> {
+pub fn handle_address(address: Option<String>) -> Option<Host> {
     if let Some(address_str) = address {
-        // search through alias
-        Some(address_str.parse::<SocketAddr>().expect("invalid address"))
+        Some(Host::new(address_str))
     } else {
         if CONFIG.server.is_empty() {
-            println!("{}", "No server address configured".red());
-            None
-        } else {
-            Some(
-                CONFIG.server[0]
-                    .address
-                    .parse::<SocketAddr>()
-                    .expect("invalid address"),
-            )
+            return None;
+        }
+
+        if CONFIG.auto_select_first_server {
+            return Some(Host::new(CONFIG.server[0].address.clone()));
+        }
+
+        let options: Vec<String> = CONFIG
+            .server
+            .iter()
+            .map(|server| format!("{:12} {}", server.alias, server.address))
+            .collect();
+        let answer = Select::new("Please select a remote server", options).prompt();
+
+        match answer {
+            Ok(options) => {
+                let address = options.split_whitespace().skip(1).next().unwrap();
+                return Some(Host::new(address.to_string()));
+            }
+            Err(err) => {
+                if match err {
+                    InquireError::OperationCanceled => false,
+                    InquireError::OperationInterrupted => false,
+                    _ => true,
+                } {
+                    eprintln!("Error: {}", err);
+                }
+
+                return None;
+            }
         }
     }
 }

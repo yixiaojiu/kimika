@@ -1,5 +1,5 @@
 alias = "kimika"
-auto_select_first_server = true
+auto_select_first_server = false
 
 [receiver]
 save_folder = "./"

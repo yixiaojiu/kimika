@@ -1,7 +1,7 @@
 use crate::utils;
+
 use reqwest::{Body, Client, Url};
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
 use tokio::{
     fs,
     io::{self, AsyncReadExt},
@@ -133,10 +133,10 @@ pub struct RequestClient {
 }
 
 impl RequestClient {
-    pub fn new(address: &SocketAddr) -> Self {
-        let url_string = format!("http://{}", address);
-        let url = Url::parse(&url_string).expect("invalid address");
-        Self { url }
+    pub fn new(host: &utils::Host) -> Self {
+        Self {
+            url: host.url(false),
+        }
     }
 
     pub async fn get_receivers(&self) -> Result<GetReceiversResponse, reqwest::Error> {

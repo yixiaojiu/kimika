@@ -15,7 +15,7 @@ pub async fn remote_receive(args: &ReceiveArgs) -> Result<(), Box<dyn std::error
     let address = if let Some(addr) = handle::handle_address(args.address.clone()) {
         addr
     } else {
-        println!("{}", "No server address configured".red());
+        eprintln!("{}", "No server address configured".red());
         return Ok(());
     };
 
