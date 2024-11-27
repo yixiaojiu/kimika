@@ -23,6 +23,7 @@ struct Cli {
 enum Commands {
     Send(send::SendArgs),
     Receive(receive::ReceiveArgs),
+    // Test,
 }
 
 #[tokio::main]
@@ -32,6 +33,10 @@ async fn main() {
     let result = match cli.command {
         Commands::Send(args) => send::send(args).await,
         Commands::Receive(args) => receive::receive(args).await,
+        // Commands::Test => {
+        //     utils::select::select_test().await.unwrap();
+        //     Ok(())
+        // }
     };
     if let Err(e) = result {
         eprintln!("Error: {}", e);

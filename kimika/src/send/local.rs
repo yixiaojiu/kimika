@@ -64,10 +64,10 @@ pub async fn local_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Error
                     if options.iter().any(|option| option.id == address) {
                         continue;
                     }
-                    options.push(select::SelectItem {
-                        id: address,
-                        label: format!("{:12} {}", receiver.alias, receiver.address),
-                    });
+                    options.push(select::SelectItem::new(
+                        address,
+                        format!("{:12} {}", receiver.alias, receiver.address),
+                    ));
                     options_tx.send(options.clone()).await.unwrap();
                     continue;
                 }

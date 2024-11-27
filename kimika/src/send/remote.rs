@@ -56,9 +56,8 @@ pub async fn remote_send(args: &SendArgs) -> Result<(), Box<dyn std::error::Erro
                 break;
             }
             let res = request_clone.get_receivers().await.unwrap();
-            let receiver_iter = res.receivers.iter().map(|receiver| select::SelectItem {
-                id: receiver.id.clone(),
-                label: receiver.alias.clone(),
+            let receiver_iter = res.receivers.iter().map(|receiver| {
+                select::SelectItem::new(receiver.id.clone(), receiver.alias.clone())
             });
             let result = tx.send(receiver_iter.collect()).await;
             if result.is_err() {

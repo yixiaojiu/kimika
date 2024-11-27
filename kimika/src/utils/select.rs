@@ -19,7 +19,7 @@ use tokio::{select, sync::mpsc};
 use tokio_stream::StreamExt;
 
 #[derive(Debug)]
-pub struct Line {
+struct Line {
     text: String,
     is_selected: bool,
     pointer: char,
@@ -103,14 +103,20 @@ pub struct SelectItem<I: ToString + Display> {
     pub label: I,
 }
 
-pub struct Select<I, W>
+impl<I: ToString + Display> SelectItem<I> {
+    pub fn new(id: String, label: I) -> Self {
+        SelectItem { id, label }
+    }
+}
+
+pub struct ReceiverSelect<I, W>
 where
     I: ToString + Display,
     W: Write,
 {
     items: Vec<SelectItem<I>>,
     lines: Vec<Line>,
-    selected_item: usize,
+    selected_index: usize,
     pointer: char,
     default_up: KeyCode,
     default_down: KeyCode,
@@ -119,15 +125,13 @@ where
     /// Keys that should move the selected item backward
     down_keys: Vec<KeyCode>,
     move_selected_item_forward: bool,
-    underline_selected_item: bool,
     longest_item_len: usize,
     item_count: usize,
     hint_message: Option<&'static str>,
     out: W,
-    // out: Option<W>, // logger: Logger<W>,
 }
 
-impl<I, W> Select<I, W>
+impl<I, W> ReceiverSelect<I, W>
 where
     I: ToString + Display + core::fmt::Debug,
     W: std::io::Write,
@@ -141,15 +145,14 @@ where
         items: Vec<SelectItem<I>>,
         out: W,
         hint_message: Option<&'static str>,
-    ) -> Select<I, W> {
-        Select {
+    ) -> ReceiverSelect<I, W> {
+        ReceiverSelect {
             items,
             pointer: '>',
-            selected_item: 0,
+            selected_index: 0,
             default_up: Up,
             default_down: Down,
             move_selected_item_forward: false,
-            underline_selected_item: false,
             up_keys: vec![],
             down_keys: vec![],
             lines: vec![],
@@ -175,48 +178,68 @@ where
         self.lines = lines;
         self.item_count = item_count;
     }
-    fn print_lines(&mut self) {
+    fn print_lines(&mut self) -> Result<(), io::Error> {
         self.lines.iter_mut().for_each(|line| line.default());
 
-        self.lines[self.selected_item].select();
+        self.lines[self.selected_index].select();
 
-        if self.underline_selected_item {
-            self.lines[self.selected_item].underline();
-        }
         if self.move_selected_item_forward {
-            self.lines[self.selected_item].space_from_pointer(2);
+            self.lines[self.selected_index].space_from_pointer(2);
         }
 
+        writeln!(&mut self.out, "")?;
         for line in self.lines.iter() {
-            writeln!(&mut self.out, "{}", line).unwrap()
+            writeln!(&mut self.out, "{}", line)?;
         }
+
+        self.set_cursor(self.item_count as u16 + 1)?;
+
+        Ok(())
     }
 
     /// clear all printed lines
     fn erase_printed_items(&mut self) -> Result<(), io::Error> {
         if self.item_count != 0 {
-            utils::crossterm::clear_up_lines((self.item_count) as u16)?;
+            // utils::crossterm::clear_up_lines((self.item_count) as u16)?;
+            self.clear_lines()?
         }
         Ok(())
     }
 
     fn move_up(&mut self) -> Result<(), io::Error> {
-        if self.selected_item == 0 {
+        if self.selected_index == 0 {
             return Ok(());
         };
-        self.selected_item -= 1;
+        self.selected_index -= 1;
         self.erase_printed_items()?;
-        self.print_lines();
+        self.print_lines()?;
         Ok(())
     }
     fn move_down(&mut self) -> Result<(), io::Error> {
-        if self.selected_item == self.items.len() - 1 {
+        if self.selected_index == self.items.len() - 1 {
             return Ok(());
         }
 
-        self.selected_item += 1;
+        self.selected_index += 1;
         self.erase_printed_items()?;
-        self.print_lines();
+        self.print_lines()?;
+        Ok(())
+    }
+
+    fn set_cursor(&self, row_offset: u16) -> Result<(), io::Error> {
+        let (_, row) = crossterm::cursor::position()?;
+        crossterm::execute!(
+            std::io::stdout(),
+            crossterm::cursor::MoveTo(30, row - row_offset)
+        )?;
+        Ok(())
+    }
+
+    fn clear_lines(&mut self) -> Result<(), io::Error> {
+        crossterm::execute!(
+            std::io::stdout(),
+            crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown),
+        )?;
         Ok(())
     }
 
@@ -229,13 +252,14 @@ where
         let mut reader = EventStream::new();
 
         if self.items.is_empty() && self.hint_message.is_some() {
-            println!("{}", self.hint_message.unwrap().yellow());
+            writeln!(&mut self.out, "{}", self.hint_message.unwrap().yellow())?;
         } else {
             self.build_lines();
-            self.print_lines();
+            self.print_lines()?;
         }
 
         enable_raw_mode()?;
+        self.set_cursor(2)?;
         loop {
             let event = reader.next();
             let rx_items = rx.recv();
@@ -252,7 +276,8 @@ where
                             if event == Event::Key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE)) && !self.items.is_empty() {
                                 break;
                             }
-                            if event == Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL)) {
+                            if event == Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL))
+                                || event == Event::Key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE)) {
                                 self.erase_printed_items()?;
                                 disable_raw_mode()?;
                                 return Ok(None);
@@ -274,7 +299,7 @@ where
 
         disable_raw_mode()?;
         self.erase_printed_items()?;
-        Ok(Some(&self.items[self.selected_item]))
+        Ok(Some(&self.items[self.selected_index]))
     }
     fn event_contains_key(&self, event: Event, keys: &[KeyCode]) -> bool {
         for key in keys.iter() {
@@ -287,27 +312,27 @@ where
     fn modify_items(&mut self, items: Vec<SelectItem<I>>) -> Result<(), io::Error> {
         if items.is_empty() {
             if self.items.is_empty() {
-                utils::crossterm::clear_up_lines(1u16).unwrap();
+                utils::crossterm::clear_up_lines(1u16)?;
             } else {
                 self.erase_printed_items()?;
             }
             if let Some(hint) = self.hint_message {
-                println!("{}", hint.yellow());
+                writeln!(&mut self.out, "{}", hint.yellow())?;
             }
             self.items = items;
-            self.selected_item = 0;
+            self.selected_index = 0;
         } else {
             if self.items.is_empty() && self.hint_message.is_some() {
-                if self.hint_message.is_some() {
-                    utils::crossterm::clear_up_lines(1u16).unwrap();
-                }
+                // if self.hint_message.is_some() {
+                //     utils::crossterm::clear_up_lines(1u16)?
+                // }
+                self.clear_lines()?;
             } else {
                 self.erase_printed_items()?;
             }
             self.items = items;
-            self.selected_item = 0;
             self.build_lines();
-            self.print_lines();
+            self.print_lines()?;
         }
         Ok(())
     }
@@ -317,7 +342,8 @@ pub async fn receiver_select(
     rx: &mut mpsc::Receiver<Vec<SelectItem<String>>>,
 ) -> Result<Option<SelectItem<String>>, io::Error> {
     println!("{} Select a receiver >>", "?".green());
-    let mut select = Select::new(Vec::new(), std::io::stderr(), Some("Searching receiver..."));
+    let mut select =
+        ReceiverSelect::new(Vec::new(), std::io::stdout(), Some("Searching receiver..."));
     let select_item = select.start_rx(rx).await?;
 
     match select_item {
@@ -332,4 +358,26 @@ pub async fn receiver_select(
         }
         None => Ok(None),
     }
+}
+
+pub async fn select_test() -> Result<(), io::Error> {
+    println!("{} Select a receiver >>", "?".green());
+    let mut select = ReceiverSelect::new(Vec::new(), std::io::stdout(), Some("dfafafjalfjaofa"));
+
+    let (tx, mut rx) = tokio::sync::mpsc::channel(1);
+
+    tokio::spawn(async move {
+        let mut vec = vec![SelectItem::new("1".to_string(), "1".to_string())];
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        tx.send(vec.clone()).await.unwrap();
+        for i in 2..7 {
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            vec.push(SelectItem::new(i.to_string(), i.to_string()));
+            tx.send(vec.clone()).await.unwrap();
+        }
+    });
+
+    select.start_rx(&mut rx).await?;
+
+    Ok(())
 }
